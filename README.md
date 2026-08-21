@@ -27,7 +27,7 @@
   <a href="https://github.com/AvenCores/open-antigravity-patcher/issues"><img src="https://img.shields.io/github/issues/AvenCores/open-antigravity-patcher?style=for-the-badge" alt="GitHub issues"></a>
 </p>
 
-Опенсорс патчер для Antigravity 2.0, Antigravity IDE и Antigravity CLI: снимает регионные ограничения без VPN и смены региона аккаунта Google. Опенсурс аналог утилиты [Antigravity IDE в России без VPN и смены региона аккаунта Google](https://github.com/confeden/Antigravity).
+Опенсорс патчер для Antigravity 2.0, Antigravity IDE, Antigravity CLI и расширения Google Antigravity для VS Code: снимает регионные ограничения без VPN и смены региона аккаунта Google. Опенсурс аналог утилиты [Antigravity IDE в России без VPN и смены региона аккаунта Google](https://github.com/confeden/Antigravity).
 
 ![maxresdefault](https://i.ibb.co/35jrkf8s/Open-AG-Patcher-Windows-x64-405ak-BL5cz.png)
 
@@ -109,10 +109,11 @@ Trajectory ID: d3ee4302-4213-40f9-9ac5-42e83e38a5ce
 - [5xx Server Errors: The Complete Guide](https://komodor.com/learn/5xx-server-errors-the-complete-guide/) — подробный разбор серверных ошибок.
 
 ## 🌟 Возможности
-- Автоматический поиск установленного Antigravity 2.0, Antigravity IDE и Antigravity CLI (`agy`) в стандартных путях и реестре Windows.
-- **Проверка обновлений** — автоматическая проверка новых версий при запуске и ручная проверка через меню (TOOLS → `7`).
+- Автоматический поиск установленного Antigravity 2.0, Antigravity IDE, Antigravity CLI (`agy`) и расширения Google Antigravity для VS Code в стандартных путях и реестре Windows.
+- **Проверка обновлений** — автоматическая проверка новых версий при запуске и ручная проверка через меню (TOOLS → `9`).
 - **Патч Antigravity CLI** — снятие экрана «Eligibility Check» и обход проверки eligibility в Go-бинаре `agy`/`agy.exe` на уровне машинного кода по байтовой сигнатуре для архитектур x86-64 и ARM64 (с резервной копией и откатом).
 - **Патч Antigravity Manager (`language_server`)** — снятие проверки авторизации (`hasValidAuth=true`) в скомпилированном бинарнике бэкенда по байтовой сигнатуре для архитектур x86-64 и ARM64 (с резервной копией и откатом).
+- **Патч расширения Google Antigravity для VS Code** — инъекция guard'а от повторного скачивания бинаря в `extension.js` расширения `google.google-antigravity` + отключение проверки смены release-канала (`isChannelChanged -> false`), чтобы уже скачанный/пропатченный бинарь не перезаписывался. Дополнительно патчит скачанный бинарь `~/.gemini/bin/antigravity` agy-патчем.
 - Поддержка Linux: поиск по `/usr/share/antigravity-ide`, определение версии через `dpkg`, `rpm` и `package.json`.
 - Поддержка macOS: поиск `.app`-бандла в `/Applications` и `~/Applications`, ad-hoc переподпись после изменения `main.js`.
 - Создание резервной копии перед изменениями.
@@ -134,15 +135,17 @@ Trajectory ID: d3ee4302-4213-40f9-9ac5-42e83e38a5ce
 | `1` Antigravity IDE patch | Применить патч к `main.js` для Antigravity IDE (bypass region lock) |
 | `2` Antigravity 2.0 patch | Применить патч к бинарному файлу `language_server` (Antigravity Manager) |
 | `3` Antigravity CLI (agy) patch | Применить патч к бинарю `agy`/`agy.exe` (unlock agy tool) |
+| `4` Antigravity VS Code Patch | Патч `extension.js` расширения `google.google-antigravity` + бинаря `~/.gemini/bin/antigravity` |
 | **RESTORE** | |
-| `4` Antigravity IDE | Восстановить оригинальный `main.js` для Antigravity IDE из бэкапа |
-| `5` Antigravity 2.0 | Восстановить оригинальный `language_server` из бэкапа |
-| `6` Antigravity CLI | Восстановить оригинальный `agy`/`agy.exe` из бэкапа |
+| `5` Antigravity IDE | Восстановить оригинальный `main.js` для Antigravity IDE из бэкапа |
+| `6` Antigravity 2.0 | Восстановить оригинальный `language_server` из бэкапа |
+| `7` Antigravity CLI | Восстановить оригинальный `agy`/`agy.exe` из бэкапа |
+| `8` Antigravity VS Code extension | Восстановить оригинальный `extension.js` (и бинарь `~/.gemini/bin`) из бэкапа |
 | **TOOLS** | |
-| `7` Check for updates | Проверить наличие новых версий на GitHub |
-| `8` Open GitHub repository | Открыть страницу проекта в браузере |
-| `9` Select custom path | Выбрать путь к папке приложения или файлу вручную |
-| `10` About program | Показать информацию о программе и авторе |
+| `9` Check for updates | Проверить наличие новых версий на GitHub |
+| `10` Open GitHub repository | Открыть страницу проекта в браузере |
+| `11` Select custom path | Выбрать путь к папке приложения или файлу вручную (IDE / 2.0 / CLI / VS Code extension) |
+| `12` About program | Показать информацию о программе и авторе |
 | **`0` Exit** | Выйти из патчера |
 
 Запуск из исходников:
@@ -213,13 +216,14 @@ xattr -dr com.apple.quarantine Open_AG_Patcher_macOS
 - **PATCH → `1`** (Antigravity IDE patch) для `Antigravity IDE.app`
 - **PATCH → `2`** (Antigravity 2.0 patch) для `Antigravity.app` (бэкенд language_server)
 - **PATCH → `3`** (Antigravity CLI (agy) patch) для бинаря `agy` (если установлен)
-- **RESTORE → `4`**, `5` или `6` для восстановления из бэкапа
+- **PATCH → `4`** (Antigravity VS Code Patch) для расширения `google.google-antigravity` в VS Code
+- **RESTORE → `5`**, `6`, `7` или `8` для восстановления из бэкапа
 
 Для `Antigravity.app` патчер обычно сам находит:
 ```text
 /Applications/Antigravity.app
 ```
-Если автопоиск не нашел приложение, выберите **TOOLS → `9`** (Select custom path) и укажите один из путей:
+Если автопоиск не нашел приложение, выберите **TOOLS → `11`** (Select custom path) и укажите один из путей:
 ```text
 /Applications/Antigravity.app
 /Applications/Antigravity IDE.app
@@ -254,7 +258,7 @@ Antigravity Manager (`language_server` или `language_server.exe`) — бэк�
 - **ARM64** (Linux arm64 / Apple Silicon macOS): Находит и заменяет последовательность `ldrb w3, [x0, #8] ; tbz w3, #0, skip` (с учётом одной или двух инструкций подготовки) на `mov w3, #1 ; strb w3, [x0, #8]` (`\x23\x00\x80\x52\x03\x20\x00\x39`).
 
 В результате возвращаемое значение `hasValidAuth` всегда принудительно выставляется в `true`, снимая блокировку.
-Патч обратим через **RESTORE → `5`** восстановлением оригинального бинарника из `.agybak`.
+Патч обратим через **RESTORE → `6`** восстановлением оригинального бинарника из `.agybak`.
 
 ### Патч для Antigravity CLI (agy)
 
@@ -293,9 +297,49 @@ Antigravity CLI — отдельный Go-бинарь (`agy.exe` на Windows, 
 **Безопасность патча:**
 - Если байтовая сигнатура не найдена в бинаре (неизвестная/неподдерживаемая версия), патчер **отказывается патчить** и ничего не меняет — выводится «signature not found (unsupported version?)».
 - Если сигнатура встречается несколько раз (Go может компилировать одну функцию в нескольких экземплярах), патчер применяет фикс ко **всем** вхождениям — они идентичны на уровне машинного кода.
-- Откат выполняется через **RESTORE → `6`** (Antigravity CLI) восстановлением из `.agybak`.
+- Откат выполняется через **RESTORE → `7`** (Antigravity CLI) восстановлением из `.agybak`.
 
 > **Примечание по платформам:** сигнатуры для x86-64 проверены под Windows и Intel macOS, для ARM64 — под Apple Silicon macOS. Discovery ищет бинарь кроссплатформенно (`PATH`, scoop на Windows, `/usr/local/bin`, `/opt/antigravity/bin`, `~/.local/bin` на POSIX). На Linux бинарь `agy` может быть скомпилирован иначе, и сигнатура может не совпасть — в этом случае патч честно сообщит об этом без модификации файла.
+
+### Патч для расширения Google Antigravity (VS Code)
+
+Расширение `google.google-antigravity` для VS Code при каждом запуске проверяет версию бэкенд-бинаря и перекачивает его с release-сервера Google. Патчер вносит два изменения в `extension.js` расширения:
+
+#### Part 1 — guard от повторного скачивания
+
+После строки `outputChannel.appendLine('[INSTALL] Checking Antigravity releases...')` инъектируется блок, который проверяет наличие уже скачанного бинаря (по `targetPathOverride` или в `~/.gemini/bin`) и, если он найден, **немедленно возвращает путь к нему**, пропуская проверку версии и повторное скачивание:
+
+```js
+{const __primary=options.targetPathOverride||getInstalledTargetPath();
+const __candidates=[__primary,
+(0,path_1.join)((0,path_1.dirname)(__primary),'antigravity'+((0,path_1.extname)(__primary)||''))];
+for(const __p of __candidates){if(__p&&await pathExists(__p)){
+outputChannel.appendLine('[INSTALL] Existing binary found at '+__p+'. Skipping version check and re-download.');return __p;}}}
+```
+
+Поиск точки вставки выполняется гибким regex'ом, который матчит **полный вызов** `outputChannel.appendLine('...');` — с учётом разных кавычек и пробелов, но строго до закрывающей скобки вызова, чтобы инъекция попала после него, а не внутрь.
+
+#### Part 2 — отключение проверки смены release-канала
+
+```js
+// было:
+const isChannelChanged = manifestFetched && lastInstalledUrl !== releaseBaseUrl;
+// стало:
+const isChannelChanged = false;
+```
+
+Без этого расширение считает release-канал изменённым и принудительно перекачивает бинарь, затирая пропатченный.
+
+#### Дополнительно — патч скачанного бинаря
+
+Сразу после патча `extension.js` патчер предлагает применить agy-патч (см. выше) к скачанному расширением бинарю `~/.gemini/bin/antigravity` (или `~/.gemini/bin/agy`) — он содержит ту же проверку eligibility.
+
+**Детали:**
+- Резервная копия: `extension.js.vscodebak` рядом с оригиналом; stale-бэкапы автоматически обновляются.
+- Обнаружение уже применённого патча по наличию инъекции и `const isChannelChanged = false;`.
+- Откат: **RESTORE → `8`** восстанавливает `extension.js` из `.vscodebak`, а также предлагает восстановить бинарь `~/.gemini/bin` из `.agybak`.
+- После патча требуется перезагрузка окна VS Code (**Developer: Reload Window**).
+- Поиск расширения: `~/.vscode/extensions`, `~/.vscode-insiders/extensions`, `~/.vscode-oss/extensions`, `~/.vscode-server/extensions`, `~/.vscode-server-insiders/extensions` (или каталог из env `VSCODE_EXTENSIONS`). При нескольких версиях выбирается самая свежая по mtime.
 
 ## 🔍 Логика поиска файла
 
@@ -327,13 +371,30 @@ Antigravity CLI — отдельный Go-бинарь (`agy.exe` на Windows, 
 
 Бинарь `agy` (`agy.exe` на Windows) ищется location-agnostic — по `PATH` и стандартным каталогам, без хардкодных путей/версий:
 
-1. Аргумент командной строки или **TOOLS → `9` → `3`** (путь к файлу `agy`/`agy.exe` или к папке).
+1. Аргумент командной строки или **TOOLS → `11` → `3`** (путь к файлу `agy`/`agy.exe` или к папке).
 2. `PATH` (`shutil.which("agy")`).
 3. Стандартные каталоги:
    - **Windows:** `%LOCALAPPDATA%`, `%PROGRAMFILES%`, `%PROGRAMFILES(X86)%`, `%ProgramData%`, `%APPDATA%` (+ подпапки `Programs`), scoop (`%USERPROFILE%\scoop\apps`, `%SCOOP%\apps`). Шаблоны: `agy/bin/agy.exe`, `agy/*/bin/agy.exe` (scoop version-dirs), `agy*/agy.exe`.
    - **Linux/macOS:** `/usr/local/bin`, `/usr/bin`, `/opt/antigravity/bin`, `/opt/antigravity`, `~/.local/bin`, `~/bin`.
 
 Если найдено несколько копий (например, scoop с несколькими версиями), выбирается самая свежая по mtime.
+
+### Поиск расширения Google Antigravity (VS Code)
+
+Файл `extension.js` расширения `google.google-antigravity` ищется в следующих каталогах (первым — переопределение через env `VSCODE_EXTENSIONS`):
+
+1. Аргумент командной строки или **TOOLS → `11` → `4`** (путь к `extension.js`, каталогу расширения `google.google-antigravity-*` или корню `extensions`).
+2. `~/.vscode/extensions`
+3. `~/.vscode-insiders/extensions`
+4. `~/.vscode-oss/extensions`
+5. `~/.vscode-server/extensions` (remote-сервер)
+6. `~/.vscode-server-insiders/extensions`
+
+Внутри каталога расширений ищутся папки по маске `google.google-antigravity-*`; при нескольких версиях выбирается самая свежая по mtime. Ожидаемый файл — `extension.js` в корне каталога расширения.
+
+### Поиск бинаря `~/.gemini/bin`
+
+Бинарь, скачиваемый расширением (используется только пунктом **PATCH → `4`**), ищется в `~/.gemini/bin`: `antigravity.exe`/`agy.exe` на Windows, `antigravity`/`agy` на POSIX. Если бинаря там нет, но расширение ещё ни разу не запускалось — патчер подскажет запустить расширение в VS Code один раз, чтобы оно скачало бинарь.
 
 ## 🔎 Определение версии Antigravity IDE
 
@@ -454,6 +515,7 @@ xcode-select --install
   - `ide/` — логика поиска и патчинга непосредственно Antigravity IDE (файлы `main.js`).
   - `agy/` — логика поиска и байт-сигнатурного патчинга бинаря Antigravity CLI (`agy`/`agy.exe`).
   - `manager/` — логика поиска и байт-сигнатурного патчинга бинаря Antigravity Manager (`language_server`/`language_server.exe`).
+  - `vscode/` — логика поиска и патчинга расширения `google.google-antigravity` для VS Code (`extension.js`) и скачанного им бинаря в `~/.gemini/bin`.
 - `source/requirements.txt` — зависимости для сборки и запуска.
 - `source/build.txt` — примеры команд сборки под разные ОС.
 - `source/icon.ico` — иконка для `exe`/`app`.
