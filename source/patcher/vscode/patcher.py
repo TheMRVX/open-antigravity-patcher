@@ -28,13 +28,14 @@ BAK_EXT = ".vscodebak"
 # PART 1 — маркер и оригинальная строка в extension.js
 PART1_ANCHOR = "outputChannel.appendLine('[INSTALL] Checking Antigravity releases...');"
 
-# Гибкий regex для PART 1 (как в ide/patcher.py): допускает разные кавычки,
-# пробелы, минифицированные имена переменных и вызовы через запятую.
-# Группа 1 — всё до точки вставки, группа 2 — хвост строки appendLine.
+# Гибкий regex для PART 1: допускает разные кавычки и пробелы, но требует
+# ПОЛНЫЙ вызов appendLine — вместе с закрывающей скобкой и опциональной ';'.
+# Это гарантирует, что вставка попадёт ПОСЛЕ вызова, а не внутри него.
+# Группа 1 — весь вызов целиком (точка вставки = m.end(1)).
 PART1_ANCHOR_RE = re.compile(
-    r"(outputChannel\s*\.\s*appendLine\s*\(\s*"          # outputChannel.appendLine(
-    r"(['\"])(\[INSTALL\]\s*Checking Antigravity releases\.*)\2"  # 'строка-маркер'
-    r"\s*,?\s*)"                                          # конец аргумента(ов)
+    r"(outputChannel\s*\.\s*appendLine\s*\(\s*"            # outputChannel.appendLine(
+    r"(['\"])\[INSTALL\]\s*Checking Antigravity releases[^'\"]*\2"  # 'строка-маркер'
+    r"\s*\)\s*;?)"                                         # ) или );
 )
 
 # Инъекция: если бинарь уже скачан (targetPathOverride или ~/.gemini/bin),
@@ -50,10 +51,12 @@ PART1_INJECT = (
 
 # PART 2 — строка проверки смены канала заменяется на константу false,
 # чтобы расширение не считало канал изменённым и не перекачивало бинарь.
-# Гибкий regex: любые имена переменных, пробелы, порядок операндов.
+# Строгий regex: ровно три идентификатора (manifestFetched, lastInstalledUrl,
+# releaseBaseUrl) в известном порядке — не цепляет посторонние выражения вида
+# `const X = a && b !== c;`.
 PART2_RE = re.compile(
     r"const\s+isChannelChanged\s*=\s*"
-    r"(?:manifestFetched|[\w$]+)\s*&&\s*(?:lastInstalledUrl|[\w$]+)\s*!==\s*(?:releaseBaseUrl|[\w$]+)\s*;"
+    r"manifestFetched\s*&&\s*lastInstalledUrl\s*!==\s*releaseBaseUrl\s*;"
 )
 PART2_DONE_RE = re.compile(r"const\s+isChannelChanged\s*=\s*false\s*;")
 PART2_REPLACEMENT = "const isChannelChanged = false;"
