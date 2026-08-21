@@ -33,17 +33,19 @@
 
 # 🎦 Видео гайд по установке и решению проблем
 
-![maxresdefault](https://i127.fastpic.org/big/2026/0314/98/07b762c3a6a29ff220a66da40e16e698.png?md5=BNMT3ALCT2xXPA_7iuzW2g&expires=1773496800)
+![maxresdefault](https://github.com/user-attachments/assets/54c4f1bd-01f5-4ee8-92d1-f7bbb910d079)
 
 <div align="center">
 
-[**Смотреть на YouTube**](https://youtu.be/hMOeXUQHy4I)
+[**Смотреть на YouTube**](https://youtu.be/GyQVTxgt12E)
 
-[**Смотреть на Dzen**](https://dzen.ru/video/watch/69b43e995330f8608c7b39e3)
+[**Смотреть на Rutube**](https://rutube.ru/video/aba4484f8e0b5e67e966ff8229385f83/)
 
-[**Смотреть в VK Video**](https://vkvideo.ru/video-234234162_456239068)
+[**Смотреть на Dzen**](https://dzen.ru/video/watch/6a7c430575822e0e4ba2970e)
 
-[**Смотреть в Telegram**](https://t.me/avencoreschat/456321)
+[**Смотреть в VK Video**](https://vkvideo.ru/video-234234162_456239108)
+
+[**Смотреть в Telegram**](https://t.me/avencoreschat/571689)
 
 </div>
 
