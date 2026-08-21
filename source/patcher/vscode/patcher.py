@@ -198,7 +198,9 @@ def do_patch_vscode(extension_js_path):
 
 
 def do_restore_vscode(extension_js_path):
-    """Восстанавливает extension.js из бэкапа .vscodebak."""
+    """Восстанавливает extension.js из бэкапа .vscodebak, а также бинарь
+    в ~/.gemini/bin (antigravity/agy) из его .agybak, если тот был пропатчен
+    пунктом 'Antigravity VS Code Patch'."""
     from patcher.cli import confirmed
 
     if not extension_js_path or not os.path.isfile(extension_js_path):
@@ -248,3 +250,15 @@ def do_restore_vscode(extension_js_path):
         panel_rows.append(("After", f"{hash_after[:8]}...{hash_after[56:]}"))
     print_panel("RESTORE COMPLETE", panel_rows)
     hint("Reload VS Code window (Developer: Reload Window) for the change to take effect.")
+
+    # --- Восстановление бинаря в ~/.gemini/bin (пропатчен agy-патчером) ---
+    from patcher.vscode.discovery import find_gemini_antigravity_binary
+    from patcher.agy.patcher import do_restore_agy
+
+    gemini_bin = find_gemini_antigravity_binary()
+    if gemini_bin and os.path.exists(gemini_bin + ".agybak"):
+        print()
+        info(f"Found patched binary backup: {color(gemini_bin, COLOR_CYAN)}")
+        do_restore_agy(gemini_bin)
+    elif gemini_bin:
+        hint(f"Binary {os.path.basename(gemini_bin)} in ~/.gemini/bin has no backup — nothing to restore.")
