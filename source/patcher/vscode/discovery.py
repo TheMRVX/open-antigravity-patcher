@@ -92,11 +92,16 @@ def resolve_extension_path(raw_path):
 
 
 def find_gemini_antigravity_binary():
-    """Бинарь Antigravity CLI, скачиваемый расширением в ~/.gemini/bin.
-    Windows: antigravity.exe, macOS/Linux: antigravity. Возвращает путь или ''."""
-    name = "antigravity.exe" if os.name == "nt" else "antigravity"
-    p = os.path.join(os.path.expanduser("~"), ".gemini", "bin", name)
-    return p if os.path.isfile(p) else ""
+    """Бинарь, скачиваемый расширением в ~/.gemini/bin.
+    Windows: antigravity.exe / agy.exe, macOS/Linux: antigravity / agy.
+    Возвращает путь или ''. Используется ТОЛЬКО пунктом 'Antigravity VS Code Patch'."""
+    home = os.path.expanduser("~")
+    ext = ".exe" if os.name == "nt" else ""
+    for name in ("antigravity", "agy"):
+        p = os.path.join(home, ".gemini", "bin", name + ext)
+        if os.path.isfile(p):
+            return p
+    return ""
 
 
 def describe_gemini_binary_path():
