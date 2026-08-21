@@ -449,6 +449,12 @@ def run_cli():
 
         manager_path = find_manager_binary()
         agy_path = find_agy_binary()
+
+    # VS Code extension ищем всегда — независимо от того, найдены ли
+    # остальные цели (это отдельный продукт со своей директорией).
+    if not vscode_path:
+        if not searched:
+            info("Searching for installations...")
         vscode_path = find_extension_js()
 
     # Если ничего не нашли вообще, даем выбор между открытием страницы загрузки и вводом пути
@@ -490,7 +496,8 @@ def run_cli():
     # Auto-check for updates on startup
     check_for_updates(silent=True)
 
-    redraw_main_screen(main_js_path, manager_path, agy_path, show_search_line=searched)
+    redraw_main_screen(main_js_path, manager_path, agy_path, vscode_path=vscode_path,
+                       show_search_line=searched)
 
     while True:
         print_menu_section("PATCH")
