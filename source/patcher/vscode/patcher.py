@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import filecmp
 
@@ -27,6 +28,15 @@ BAK_EXT = ".vscodebak"
 # PART 1 — маркер и оригинальная строка в extension.js
 PART1_ANCHOR = "outputChannel.appendLine('[INSTALL] Checking Antigravity releases...');"
 
+# Гибкий regex для PART 1 (как в ide/patcher.py): допускает разные кавычки,
+# пробелы, минифицированные имена переменных и вызовы через запятую.
+# Группа 1 — всё до точки вставки, группа 2 — хвост строки appendLine.
+PART1_ANCHOR_RE = re.compile(
+    r"(outputChannel\s*\.\s*appendLine\s*\(\s*"          # outputChannel.appendLine(
+    r"(['\"])(\[INSTALL\]\s*Checking Antigravity releases\.*)\2"  # 'строка-маркер'
+    r"\s*,?\s*)"                                          # конец аргумента(ов)
+)
+
 # Инъекция: если бинарь уже скачан (targetPathOverride или ~/.gemini/bin),
 # пропускаем проверку версии и повторное скачивание.
 PART1_INJECT = (
@@ -40,9 +50,12 @@ PART1_INJECT = (
 
 # PART 2 — строка проверки смены канала заменяется на константу false,
 # чтобы расширение не считало канал изменённым и не перекачивало бинарь.
-PART2_ANCHOR_RE = (
-    r"const\s+isChannelChanged\s*=\s*manifestFetched\s*&&\s*lastInstalledUrl\s*!==\s*releaseBaseUrl\s*;"
+# Гибкий regex: любые имена переменных, пробелы, порядок операндов.
+PART2_RE = re.compile(
+    r"const\s+isChannelChanged\s*=\s*"
+    r"(?:manifestFetched|[\w$]+)\s*&&\s*(?:lastInstalledUrl|[\w$]+)\s*!==\s*(?:releaseBaseUrl|[\w$]+)\s*;"
 )
+PART2_DONE_RE = re.compile(r"const\s+isChannelChanged\s*=\s*false\s*;")
 PART2_REPLACEMENT = "const isChannelChanged = false;"
 
 
@@ -55,6 +68,12 @@ def _apply_part1(content):
     """Возвращает (новый_контент, статус). Статус: 'applied'|'already'|'not-found'."""
     if PART1_INJECT in content:
         return content, "already"
+    m = PART1_ANCHOR_RE.search(content)
+    if m:
+        insert_at = m.end(1)
+        new_content = content[:insert_at] + PART1_INJECT + content[insert_at:]
+        return new_content, "applied"
+    # Фолбэк: точный поиск по маркеру (на случай экзотического форматирования)
     idx = content.find(PART1_ANCHOR)
     if idx == -1:
         return content, "not-found"
@@ -65,16 +84,14 @@ def _apply_part1(content):
 
 def _apply_part2(content):
     """Возвращает (новый_контент, статус)."""
-    if "const isChannelChanged = false;" in content:
+    if PART2_DONE_RE.search(content):
         # Уже пропатчено; но если рядом остался оригинальный вариант — это другой
         # экземпляр, обрабатываем его ниже.
-        import re
-        new_content, n = re.subn(PART2_ANCHOR_RE, PART2_REPLACEMENT, content)
+        new_content, n = PART2_RE.subn(PART2_REPLACEMENT, content)
         if n:
             return new_content, "applied"
         return content, "already"
-    import re
-    new_content, n = re.subn(PART2_ANCHOR_RE, PART2_REPLACEMENT, content)
+    new_content, n = PART2_RE.subn(PART2_REPLACEMENT, content)
     if not n:
         return content, "not-found"
     return new_content, "applied"
