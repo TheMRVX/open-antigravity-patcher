@@ -2,6 +2,18 @@ import os
 import glob
 
 
+def _user_home():
+    """Домашний каталог пользователя. На POSIX при запуске через sudo
+    возвращает дом вызвавшего пользователя (~user), а не /root,
+    чтобы ~/.vscode-server и ~/.gemini находились корректно."""
+    if os.name == "posix":
+        from patcher.utils.file import get_posix_invoking_user_home
+        home = get_posix_invoking_user_home()
+        if home:
+            return home
+    return os.path.expanduser("~")
+
+
 def clean_path(raw_path):
     """Убирает кавычки/пробелы по краям — как в ide/agy discovery."""
     return raw_path.strip().strip('"').strip("'")
@@ -10,7 +22,7 @@ def clean_path(raw_path):
 def _extension_roots():
     """Корневые каталоги расширений VS Code (обычный, Insiders, OSS, remote-server).
     Первым идёт переопределение через env VSCODE_EXTENSIONS, если задано."""
-    home = os.path.expanduser("~")
+    home = _user_home()
     roots = []
     env = os.environ.get("VSCODE_EXTENSIONS")
     if env and os.path.isdir(env):
@@ -95,7 +107,7 @@ def find_gemini_antigravity_binary():
     """Бинарь, скачиваемый расширением в ~/.gemini/bin.
     Windows: antigravity.exe / agy.exe, macOS/Linux: antigravity / agy.
     Возвращает путь или ''. Используется ТОЛЬКО пунктом 'Antigravity VS Code Patch'."""
-    home = os.path.expanduser("~")
+    home = _user_home()
     ext = ".exe" if os.name == "nt" else ""
     for name in ("antigravity", "agy"):
         p = os.path.join(home, ".gemini", "bin", name + ext)
