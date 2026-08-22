@@ -218,7 +218,7 @@ def _kv(label, value_text, value_color):
     print(f"      {label:<9}{color(value_text, value_color)}")
 
 
-def print_target_info(main_js_path, manager_path="", agy_path="", vscode_path="", show_search_line=False):
+def print_target_info(main_js_path, manager_path="", agy_path="", vscode_path="", vscode_agy_path="", show_search_line=False):
     if show_search_line:
         info("Searching for installations...")
 
@@ -283,7 +283,7 @@ def print_target_info(main_js_path, manager_path="", agy_path="", vscode_path=""
 
     print()
 
-    # 4. Antigravity VS Code Extension Info
+    # 4. Antigravity VS Code Extension Info (extension.js + бинарь agy)
     print_menu_section("ANTIGRAVITY VS CODE EXTENSION")
     _kv("Target:", vscode_path if vscode_path else "Not found", COLOR_CYAN)
     if vscode_path and os.path.isfile(vscode_path):
@@ -297,6 +297,19 @@ def print_target_info(main_js_path, manager_path="", agy_path="", vscode_path=""
         except Exception:
             _kv("Patch:", "unreadable", COLOR_RED)
         size = file_size(vscode_path)
+        _kv("Size:", format_bytes(size), COLOR_GREEN if size > 0 else COLOR_YELLOW)
+    else:
+        _kv("Status:", "not found", COLOR_YELLOW)
+
+    print()
+
+    _kv("AGY Bin:", vscode_agy_path if vscode_agy_path else "Not found", COLOR_CYAN)
+    if vscode_agy_path and os.path.isfile(vscode_agy_path):
+        _kv("Status:", "found", COLOR_GREEN)
+        patched = is_agy_patched(vscode_agy_path)
+        _kv("Patch:", "already patched" if patched else "not patched",
+            COLOR_YELLOW if patched else COLOR_GREEN)
+        size = file_size(vscode_agy_path)
         _kv("Size:", format_bytes(size), COLOR_GREEN if size > 0 else COLOR_YELLOW)
     else:
         _kv("Status:", "not found", COLOR_YELLOW)
@@ -341,12 +354,12 @@ def show_about():
 
 
 
-def redraw_main_screen(main_js_path, manager_path="", agy_path="", vscode_path="", show_search_line=False):
+def redraw_main_screen(main_js_path, manager_path="", agy_path="", vscode_path="", vscode_agy_path="", show_search_line=False):
 
     clear_screen()
     print_banner()
     print_target_info(main_js_path, manager_path, agy_path, vscode_path=vscode_path,
-                      show_search_line=show_search_line)
+                      vscode_agy_path=vscode_agy_path, show_search_line=show_search_line)
     print()
     print_update_status_notice()
 
@@ -359,44 +372,55 @@ def set_vscode_path(new_path):
         frame.f_locals["vscode_path"] = new_path
 
 
-def do_patch_vscode_flow(vscode_path, set_path_cb):
-    """Патчит расширение google.google-antigravity (extension.js) и бинарь
-    ~/.gemini/bin/antigravity через agy-патчер.
+def set_vscode_agy_path(new_path):
+    """Колбэк для do_patch_vscode_flow — обновляет локальную переменную vscode_agy_path
+    в кадре run_cli (через sys._getframe)."""
+    frame = sys._getframe(2)
+    if frame.f_code.co_name == "run_cli":
+        frame.f_locals["vscode_agy_path"] = new_path
 
-    Если бинарь agy не найден нигде — уведомляет, что нужно хотя бы раз
-    запустить расширение в VS Code (оно скачает бинарь)."""
+
+def do_patch_vscode_flow(vscode_path, vscode_agy_path, set_js_cb=None, set_agy_cb=None):
+    """Патчит расширение google.google-antigravity (extension.js) и бинарь
+    ~/.gemini/bin/antigravity (agy) через agy-патчер.
+
+    Патч блокируется, пока не найдены ОБА файла: extension.js и бинарь agy."""
     from patcher.agy.patcher import do_patch_agy
 
-    # --- 1. Патчим extension.js ---
+    # --- 0. Предварительный поиск: оба файла должны существовать ---
     if not vscode_path or not os.path.isfile(vscode_path):
         vscode_path = find_extension_js()
-        if vscode_path:
-            set_path_cb(vscode_path)
+        if vscode_path and set_js_cb:
+            set_js_cb(vscode_path)
 
-    if vscode_path and os.path.isfile(vscode_path):
-        do_patch_vscode(vscode_path)
-    else:
-        warn("VS Code extension 'google.google-antigravity' not found.")
+    if not vscode_agy_path or not os.path.isfile(vscode_agy_path):
+        vscode_agy_path = find_gemini_antigravity_binary()
+        if vscode_agy_path and set_agy_cb:
+            set_agy_cb(vscode_agy_path)
+
+    missing = []
+    if not vscode_path or not os.path.isfile(vscode_path):
+        missing.append("extension.js (VS Code extension 'google.google-antigravity')")
+    if not vscode_agy_path or not os.path.isfile(vscode_agy_path):
+        missing.append(f"agy binary ({describe_gemini_binary_path()})")
+
+    if missing:
+        err("Antigravity VS Code Patch blocked — required files not found:")
+        for m in missing:
+            err(f"  - {m}")
         hint("Install the 'Google Antigravity' extension in VS Code first")
-        hint("(Extensions view -> search 'Antigravity' -> Install).")
-        print()
+        hint("(Extensions view -> search 'Antigravity' -> Install),")
+        hint("run it once — it downloads the binary to ~/.gemini/bin automatically.")
+        return False
+
+    # --- 1. Патчим extension.js ---
+    do_patch_vscode(vscode_path)
 
     # --- 2. Патчим бинарь ~/.gemini/bin/antigravity (agy-патчем) ---
     print()
-    gemini_bin = find_gemini_antigravity_binary()
-    if gemini_bin:
-        info(f"Found downloaded binary: {color(gemini_bin, COLOR_CYAN)}")
-        do_patch_agy(gemini_bin)
-    else:
-        # Бинаря нет ни в ~/.gemini/bin, ни в системе — расширение его ещё не скачивало
-        from patcher.agy.discovery import find_agy_binary
-        if find_agy_binary():
-            hint("Binary not found in ~/.gemini/bin, but an agy binary exists on the system.")
-            hint("Patch it via menu option 3 (Antigravity CLI (agy) patch).")
-        else:
-            err("Antigravity binary (~/.gemini/bin) not found on this system.")
-            hint("Run the 'Google Antigravity' extension in VS Code at least once —")
-            hint("it will download the binary automatically, then re-run this patch.")
+    info(f"Found downloaded binary: {color(vscode_agy_path, COLOR_CYAN)}")
+    do_patch_agy(vscode_agy_path)
+    return True
 
 
 def run_cli():
@@ -404,6 +428,7 @@ def run_cli():
     manager_path = ""
     agy_path = ""
     vscode_path = ""
+    vscode_agy_path = ""
     searched = False
 
     # 1. Проверяем аргументы командной строки
@@ -450,12 +475,15 @@ def run_cli():
         manager_path = find_manager_binary()
         agy_path = find_agy_binary()
 
-    # VS Code extension ищем всегда — независимо от того, найдены ли
-    # остальные цели (это отдельный продукт со своей директорией).
-    if not vscode_path:
+    # VS Code extension и его бинарь agy ищем всегда — независимо от того,
+    # найдены ли остальные цели (это отдельный продукт со своей директорией).
+    if not vscode_path or not vscode_agy_path:
         if not searched:
             info("Searching for installations...")
-        vscode_path = find_extension_js()
+        if not vscode_path:
+            vscode_path = find_extension_js()
+        if not vscode_agy_path:
+            vscode_agy_path = find_gemini_antigravity_binary()
 
     # Если ничего не нашли вообще, даем выбор между открытием страницы загрузки и вводом пути
     if not main_js_path and not manager_path and not agy_path:
@@ -497,14 +525,14 @@ def run_cli():
     check_for_updates(silent=True)
 
     redraw_main_screen(main_js_path, manager_path, agy_path, vscode_path=vscode_path,
-                       show_search_line=searched)
+                       vscode_agy_path=vscode_agy_path, show_search_line=searched)
 
     while True:
         print_menu_section("PATCH")
         print_menu_row("1", "Antigravity IDE patch", "bypass region lock (isGoogleInternal)", COLOR_GREEN)
         print_menu_row("2", "Antigravity 2.0 patch", "patch language_server binary", COLOR_GREEN)
         print_menu_row("3", "Antigravity CLI (agy) patch", "unlock agy tool", COLOR_GREEN)
-        print_menu_row("4", "Antigravity VS Code Patch", "patch google.google-antigravity extension.js", COLOR_GREEN)
+        print_menu_row("4", "Antigravity VS Code Patch", "patch google.google-antigravity extension.js + agy binary", COLOR_GREEN)
 
         print_menu_section("RESTORE")
         print_menu_row("5", "Antigravity IDE", "from backup", COLOR_YELLOW)
@@ -531,7 +559,7 @@ def run_cli():
         # Пустой ввод — не выходим, просто перерисовываем меню
         if choice == "":
             redraw_main_screen(main_js_path, manager_path, agy_path, vscode_path,
-                               show_search_line=searched)
+                               vscode_agy_path, show_search_line=searched)
             continue
 
         valid_choices = {str(i) for i in range(1, 13)}
@@ -540,7 +568,7 @@ def run_cli():
             print()
             pause()
             redraw_main_screen(main_js_path, manager_path, agy_path, vscode_path,
-                               show_search_line=searched)
+                               vscode_agy_path, show_search_line=searched)
             continue
 
         handled = True
@@ -575,7 +603,8 @@ def run_cli():
                     searched = False
                     do_patch_agy(agy_path)
         elif choice == "4":
-            do_patch_vscode_flow(vscode_path, set_vscode_path)
+            do_patch_vscode_flow(vscode_path, vscode_agy_path,
+                                 set_js_cb=set_vscode_path, set_agy_cb=set_vscode_agy_path)
         elif choice == "5":
             if main_js_path:
                 do_restore(main_js_path, show_search_line=searched)
@@ -600,7 +629,7 @@ def run_cli():
             check_for_updates(silent=False)
         elif choice == "10":
             print_target_info(main_js_path, manager_path, agy_path, vscode_path=vscode_path,
-                              show_search_line=searched)
+                              vscode_agy_path=vscode_agy_path, show_search_line=searched)
             print()
             if confirmed("Open GitHub repository in browser?"):
                 url = "https://github.com/AvenCores/open-antigravity-unlock"
@@ -611,12 +640,13 @@ def run_cli():
         elif choice == "11":
             while True:
                 redraw_main_screen(main_js_path, manager_path, agy_path, vscode_path,
-                                   show_search_line=searched)
+                                   vscode_agy_path, show_search_line=searched)
                 print_menu_section("SELECT CUSTOM PATH")
                 print_menu_row("1", "Antigravity IDE path", "folder or main.js", COLOR_GREEN)
                 print_menu_row("2", "Antigravity 2.0 path", "folder or language_server binary", COLOR_GREEN)
                 print_menu_row("3", "Antigravity CLI path", "agy.exe or folder", COLOR_GREEN)
-                print_menu_row("4", "VS Code extension path", "extension.js or extensions folder", COLOR_GREEN)
+                print_menu_row("4", "VS Code extension path (JS)", "extension.js or extensions folder", COLOR_GREEN)
+                print_menu_row("5", "VS Code binary path (agy)", "agy/antigravity binary in ~/.gemini/bin", COLOR_GREEN)
                 print()
                 print_menu_row("0", "Back", "return to main menu", COLOR_RED)
                 print_menu_footer("Leaves auto-detection results intact for other targets.")
@@ -680,7 +710,7 @@ def run_cli():
                      print()
                      hint("Enter the path to extension.js, the google.google-antigravity-*")
                      hint("extension folder, or the .vscode/extensions root folder.")
-                     raw = input(color("\n  VS Code Extension Path > ", COLOR_CYAN, COLOR_BOLD)).strip()
+                     raw = input(color("\n  VS Code Extension Path (JS) > ", COLOR_CYAN, COLOR_BOLD)).strip()
                      if raw:
                          new_path = resolve_extension_path(raw)
                          if new_path and os.path.isfile(new_path):
@@ -689,6 +719,21 @@ def run_cli():
                              ok("Antigravity VS Code extension path updated!")
                          else:
                              err("Could not resolve a valid VS Code extension target (extension.js not found).")
+                     print()
+                     pause()
+                elif sub_choice == "5":
+                     print()
+                     hint(f"Enter the path to the agy/antigravity binary downloaded")
+                     hint(f"by the extension ({describe_gemini_binary_path()}) or any agy file.")
+                     raw = input(color("\n  VS Code Binary Path (agy) > ", COLOR_CYAN, COLOR_BOLD)).strip()
+                     if raw:
+                         new_path = resolve_agy_path(raw)
+                         if new_path and os.path.isfile(new_path):
+                             vscode_agy_path = new_path
+                             searched = False
+                             ok("VS Code agy binary path updated!")
+                         else:
+                             err("Could not resolve a valid VS Code agy binary target.")
                      print()
                      pause()
             handled = True
@@ -700,4 +745,4 @@ def run_cli():
         if handled:
             pause()
         redraw_main_screen(main_js_path, manager_path, agy_path, vscode_path,
-                           show_search_line=searched)
+                           vscode_agy_path, show_search_line=searched)

@@ -29,7 +29,7 @@
 
 Опенсорс патчер для Antigravity 2.0, Antigravity IDE, Antigravity CLI и расширения Google Antigravity для VS Code: снимает регионные ограничения без VPN и смены региона аккаунта Google. Опенсурс аналог утилиты [Antigravity IDE в России без VPN и смены региона аккаунта Google](https://github.com/confeden/Antigravity).
 
-![maxresdefault](https://i.ibb.co/sdRSNNrV/python-TR0-P1-Sk-EVg.png)
+![maxresdefault](https://i.ibb.co/s9Vh80CM/python-w-TPlox-Po-G4.png)
 
 # 🎦 Видео гайд по установке и решению проблем
 
