@@ -153,6 +153,34 @@ Error ID: b2c1d9edcaac4fd5ac5766de06c2253b
 Trajectory ID: d3ee4302-4213-40f9-9ac5-42e83e38a5ce
 ```
 
+## ⚠️ Ошибка патча: "✗ isGoogleInternal -> true (auth) — pattern not found"
+
+Если при применении патча (PATCH → `1`: Antigravity IDE patch) вы получаете сообщение:
+
+```text
+✗ isGoogleInternal -> true (auth) — pattern not found
+```
+
+это означает, что патчер не нашёл ожидаемый паттерн `isGoogleInternal` в файле `main.js`, который он пытается пропатчить.
+
+**В почти 100% случаев это происходит потому, что патчер нашёл и пытается пропатчить случайный `main.js` файл, не относящийся к Antigravity IDE.**
+
+### Решение:
+
+1. Проверьте в главном меню патчера, какой именно путь к файлу `main.js` был определён (обычно выводится перед началом патчинга).
+2. Убедитесь, что путь ведёт к реальному файлу Antigravity IDE, например:
+   - Windows: `%LOCALAPPDATA%\Programs\Antigravity IDE\resources\app\out\main.js`
+   - Linux: `/usr/share/antigravity-ide/resources/app/out/main.js`
+   - macOS: `/Applications/Antigravity IDE.app/Contents/Resources/app/out/main.js`
+3. Если путь указывает на другой файл (например, `main.js` из другого Electron-приложения или из текущей директории скрипта), выберите **TOOLS → `11` (Select custom path)** и укажите корректный путь к папке Antigravity IDE вручную.
+4. Убедитесь, что в рабочей директории патчера нет постороннего файла `main.js` — если он там есть, патчер может подхватить его вместо нужного (поиск начинается с текущей директории).
+
+> **Примечание:** Если вы запускаете патчер из папки, где лежит какой-либо другой `main.js` (например, от другого проекта), переместите скрипт в другую директорию или явно укажите путь к Antigravity IDE через аргумент командной строки:
+>
+> ```bash
+> python main.py "C:\Users\<username>\AppData\Local\Programs\Antigravity IDE"
+> ```
+
 ## 📚 Дополнительная информация по ошибкам
 Для более глубокого понимания типов HTTP-ошибок и способов их диагностики рекомендуем ознакомиться с данным руководством:
 - [5xx Server Errors: The Complete Guide](https://komodor.com/learn/5xx-server-errors-the-complete-guide/) — подробный разбор серверных ошибок.
