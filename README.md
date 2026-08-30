@@ -69,6 +69,55 @@ Headers: {"Alt-Svc":["h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"],"Cont
 }
 ```
 
+## ⚠️ Ошибка HTTP 403 Forbidden / SUBSCRIPTION_REQUIRED (#3501) / Agent execution terminated due to error
+Если в Antigravity IDE или CLI (`agy`) появляется ошибка `HTTP 403 Forbidden` с причиной `SUBSCRIPTION_REQUIRED` или сообщением `You do not have a valid license of this product` или `Agent execution terminated due to error`, это не проблема локального патча и не экран `Eligibility Check`.
+
+Эта ошибка связана с API Google и состоянием аккаунта пользователя: лицензией, доступом или проверкой прав на стороне Google. Патчер меняет только локальные файлы Antigravity/Antigravity CLI и не может выдать аккаунту лицензию или изменить ответ Google API, поэтому с этой ошибкой он не поможет.
+
+**Решение:**
+1. **Смените регион аккаунта Google** или используйте аккаунт, зарегистрированный в регионе, где Antigravity официально работает.
+2. **Если смена региона не помогает**, необходимо купить официальную подписку.
+
+**Доступные тарифные планы (Google AI):**
+
+*   **Google AI Plus**
+    *   **Цена:** 445 ₽ в месяц
+    *   **Хранилище:** 400 ГБ
+    *   **Возможности:** Используйте ИИ-инструменты для продуктивной работы и увеличенные в 2 раза лимиты* в Gemini.
+    *   [Оформить подписку Plus](https://one.google.com/about/google-ai-plans/) | [Посмотреть преимущества тарифа](https://one.google.com/about/google-ai-plans/) *(Есть условия)*
+*   **Google AI Pro**
+    *   **Цена:** 1 790 ₽/мес.
+    *   **Хранилище:** 5 ТБ
+    *   **Возможности:** Успевайте больше с увеличенными в 4 раза лимитами* в Gemini.
+    *   [Оформить подписку Pro](https://one.google.com/about/google-ai-plans/) | [Посмотреть преимущества тарифа](https://one.google.com/about/google-ai-plans/) *(Есть условия)*
+*   **Google AI Ultra**
+    *   **Цена:** От 6 990 ₽/мес.
+    *   **Хранилище:** От 20 ТБ
+    *   **Возможности:** Ускорьте рабочие процессы с увеличенными в 20 раз лимитами* в Gemini.
+    *   [Оформить подписку Ultra](https://one.google.com/about/google-ai-plans/) | [Посмотреть преимущества тарифа](https://one.google.com/about/google-ai-plans/) *(Есть условия)*
+
+**Пример ошибки:**
+```json
+{
+  "error": {
+    "code": 403,
+    "details": [
+      {
+        "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+        "domain": "cloudaicompanion.googleapis.com",
+        "metadata": {
+          "error_number": "1001",
+          "uiMessage": "true"
+        },
+        "reason": "SUBSCRIPTION_REQUIRED"
+      }
+    ],
+    "message": "You do not have a valid license of this product. Please contact your administrator to request a license. If you are not an enterprise user and believe you are receiving this message as an error, please try using the latest version and logging in again. (#3501)",
+    "status": "PERMISSION_DENIED"
+  }
+}
+```
+
 ## ⚠️ Ошибка HTTP 400 Bad Request
 Если вы получаете ошибку `HTTP 400 Bad Request` с сообщением `User location is not supported for the API use`, это означает, что Google определил ваше местоположение как неподдерживаемое.
 
