@@ -1,7 +1,12 @@
 name: Sync with Upstream
 
 on:
-  workflow_dispatch: # Allow manual trigger via GitHub Actions UI
+  workflow_dispatch:
+    inputs:
+      force_pr:
+        description: 'Force PR creation even if no new commits'
+        type: boolean
+        default: false
   schedule:
     - cron: '0 12 * * 1' # Run weekly on Monday at 12:00 UTC
 
@@ -46,7 +51,7 @@ jobs:
           fi
 
       - name: Create Sync Branch and Pull Request
-        if: steps.check_upstream.outputs.behind_count != '0'
+        if: steps.check_upstream.outputs.behind_count != '0' || github.event.inputs.force_pr == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -76,7 +81,7 @@ jobs:
 Upstream repository (\`AvenCores/open-antigravity-patcher\`) has **${{ steps.check_upstream.outputs.behind_count }}** new commit(s):
 
 ### Upstream Commits:
-${{ steps.check_upstream.outputs.commits }}
+${{ steps.check_upstream.outputs.commits || 'No new commits (Manual Trigger)' }}
 
 ---
 
