@@ -33,9 +33,6 @@ An open-source patcher and region-unlock utility for **Antigravity 2.0**, **Anti
 Ensure you have Python 3.8+ installed:
 
 ```bash
-# Navigate to the source directory
-cd source
-
 # Install dependencies
 pip install -r requirements.txt
 
@@ -263,7 +260,6 @@ The patcher looks for target files in the following order:
 To build standalone binary executables using PyInstaller:
 
 ```bash
-cd source
 python3 -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
@@ -292,37 +288,36 @@ pip install -r requirements.txt
 open-antigravity-patcher/
 ├── LICENSE                     # GNU General Public License v3.0
 ├── README.md                   # Project documentation
+├── requirements.txt            # Python package dependencies
+├── main.py                     # Main application entry point & privilege elevation
+├── version.txt                 # Windows PE file version metadata
+├── build.txt                   # PyInstaller build commands reference
+├── icon.ico                    # Application icon
 ├── .github/
 │   └── workflows/
 │       └── build-python.yml    # Multi-platform CI build pipeline
-└── source/
-    ├── main.py                 # Main application entry point & privilege elevation
-    ├── requirements.txt        # Python package dependencies
-    ├── build.txt               # PyInstaller build commands reference
-    ├── version.txt             # Windows PE file version metadata
-    ├── icon.ico                # Application icon
-    └── patcher/
-        ├── __init__.py         # Package root
-        ├── constants.py        # Global constants, regexes, and ANSI palette
-        ├── cli.py              # Interactive console interface and menu routing
-        ├── ide/                # Antigravity IDE (main.js) discovery & patching
-        │   ├── discovery.py
-        │   └── patcher.py
-        ├── manager/            # Antigravity 2.0 (language_server) discovery & patching
-        │   ├── discovery.py
-        │   └── patcher.py
-        ├── agy/                # Antigravity CLI (agy binary) discovery & patching
-        │   ├── discovery.py
-        │   └── patcher.py
-        ├── vscode/             # VS Code extension (extension.js) discovery & patching
-        │   ├── discovery.py
-        │   └── patcher.py
-        └── utils/              # Helper utilities
-            ├── admin.py        # UAC / sudo elevation & process termination
-            ├── captcha.py      # Confirmation CAPTCHA for re-patching
-            ├── console.py      # ANSI terminal formatting, tables, and frames
-            ├── file.py         # File hashing, POSIX permissions, and macOS codesign
-            └── update.py       # GitHub release update checker
+└── patcher/
+    ├── __init__.py             # Package root
+    ├── constants.py            # Global constants, regexes, and ANSI palette
+    ├── cli.py                  # Interactive console interface and menu routing
+    ├── ide/                    # Antigravity IDE (main.js) discovery & patching
+    │   ├── discovery.py
+    │   └── patcher.py
+    ├── manager/                # Antigravity 2.0 (language_server) discovery & patching
+    │   ├── discovery.py
+    │   └── patcher.py
+    ├── agy/                    # Antigravity CLI (agy binary) discovery & patching
+    │   ├── discovery.py
+    │   └── patcher.py
+    ├── vscode/                 # VS Code extension (extension.js) discovery & patching
+    │   ├── discovery.py
+    │   └── patcher.py
+    └── utils/                  # Helper utilities
+        ├── admin.py            # UAC / sudo elevation & process termination
+        ├── captcha.py          # Confirmation CAPTCHA for re-patching
+        ├── console.py          # ANSI terminal formatting, tables, and frames
+        ├── file.py             # File hashing, POSIX permissions, and macOS codesign
+        └── update.py           # GitHub release update checker
 ```
 
 ---
