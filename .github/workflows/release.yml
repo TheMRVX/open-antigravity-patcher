@@ -343,60 +343,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.release_info.outputs.tag_name }}
-          name: "Open AG Patcher ${{ steps.release_info.outputs.tag_name }}"
+          name: ${{ steps.release_info.outputs.tag_name }}
           draft: ${{ github.event.inputs.draft || false }}
           prerelease: ${{ github.event.inputs.prerelease || false }}
+          generate_release_notes: true
           files: release_assets/*
-          body: |
-            This release provides native binary builds, standalone executables, and packages for Windows, Linux, and macOS.
-
-            ## Changelog
-
-            ### Features & Enhancements
-            - **Full English Localization (`i18n`)**: Localized interactive CLI menus, prompts, diagnostics, and documentation from Russian to idiomatic English.
-            - **Repository Architecture**: Flattened project layout by moving all source modules from `source/` directly to the repository root.
-            - **CI/CD & Multi-Platform Packaging**: Automated build matrix targeting Windows, Linux, and macOS for x86-64 and ARM64 architectures.
-            - **Debian Packaging**: Added native `.deb` package builds for Debian and Ubuntu-based Linux distributions.
-            - **Upstream Synchronization**: Added automated GitHub Actions workflow (`sync-upstream.yml`) to streamline synchronization with upstream developments.
-
-            ### Maintenance & Fixes
-            - Standardized `.gitignore` rules for build artifacts, virtual environments, and compiler caches.
-            - Updated release channel and update checker endpoints to point to `TheMRVX/open-antigravity-patcher`.
-            - Documented project architecture, troubleshooting guides, and compatibility requirements in `README.md` and `CHANGELOG.md`.
-
-            ---
-
-            ## Installation & Quick Start
-
-            ### Windows
-            Download and execute `Open_AG_Patcher_Windows_x64.exe` (or `Open_AG_Patcher_Windows_arm64.exe` for ARM64). Administrative elevation is requested automatically when modifying protected system directories.
-
-            ### Linux
-            Install via the Debian package:
-            ```bash
-            sudo dpkg -i open-ag-patcher_${{ steps.release_info.outputs.version }}_amd64.deb
-            open-ag-patcher
-            ```
-            Or run the standalone binary:
-            ```bash
-            chmod +x Open_AG_Patcher_Linux_x64
-            ./Open_AG_Patcher_Linux_x64
-            ```
-
-            ### macOS
-            Download `Open_AG_Patcher_macOS` (Universal2: Intel + Apple Silicon). Remove the quarantine attribute if running from Terminal:
-            ```bash
-            chmod +x Open_AG_Patcher_macOS
-            xattr -dr com.apple.quarantine Open_AG_Patcher_macOS
-            ./Open_AG_Patcher_macOS
-            ```
-
-            ---
-
-            ## Verification
-
-            Verify download integrity against the provided `checksums.txt`:
-
-            ```bash
-            sha256sum -c checksums.txt
-            ```
