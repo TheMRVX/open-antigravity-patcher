@@ -3,14 +3,15 @@ name: Sync with Upstream
 on:
   workflow_dispatch: # Allow manual trigger via GitHub Actions UI
   schedule:
-    - cron: '0 12 * * 1' # Check every Monday at 12:00 UTC
+    - cron: '0 12 * * 1' # Run weekly on Monday at 12:00 UTC
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
-  sync:
-    name: Sync with Upstream Repository
+  check-and-sync:
+    name: Check & Propose Upstream Sync PR
     runs-on: ubuntu-latest
 
     steps:
@@ -20,7 +21,7 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Configure Git
+      - name: Configure Git Identity
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -37,9 +38,62 @@ jobs:
           echo "behind_count=$BEHIND_COUNT" >> $GITHUB_OUTPUT
           echo "Upstream is $BEHIND_COUNT commit(s) ahead."
 
-      - name: Merge Upstream Changes (with Directory Rename Tracking)
+          if [ "$BEHIND_COUNT" -gt 0 ]; then
+            COMMITS_LOG=$(git log --oneline HEAD..upstream/main | sed 's/^/- /')
+            echo "commits<<EOF" >> $GITHUB_OUTPUT
+            echo "$COMMITS_LOG" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Sync Branch and Pull Request
         if: steps.check_upstream.outputs.behind_count != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Git ort merge driver automatically tracks renamed files across directories
-          git merge -X find-renames=40% upstream/main -m "chore(sync): merge upstream updates from AvenCores/open-antigravity-patcher"
-          git push origin main
+          SYNC_BRANCH="sync/upstream-updates"
+          DATE_STR=$(date -u +'%Y-%m-%d')
+
+          # Switch to isolated sync branch based on current main
+          git checkout -B "$SYNC_BRANCH" origin/main
+
+          # Attempt merge with directory rename tracking
+          MERGE_SUCCESS=true
+          git merge -X find-renames=40% upstream/main -m "chore(sync): merge upstream commits as of $DATE_STR" || MERGE_SUCCESS=false
+
+          if [ "$MERGE_SUCCESS" = "false" ]; then
+            echo "Merge encountered conflicts; aborting auto-merge and creating clean review branch."
+            git merge --abort
+            git checkout -B "$SYNC_BRANCH" origin/main
+          fi
+
+          git push origin "$SYNC_BRANCH" --force
+
+          # Check if a sync PR already exists
+          PR_EXISTS=$(gh pr list --head "$SYNC_BRANCH" --json number -q '.[0].number' 2>/dev/null || true)
+
+          PR_BODY="## Upstream Sync Proposed ($DATE_STR)
+
+Upstream repository (\`AvenCores/open-antigravity-patcher\`) has **${{ steps.check_upstream.outputs.behind_count }}** new commit(s):
+
+### Upstream Commits:
+${{ steps.check_upstream.outputs.commits }}
+
+---
+
+### Review Checklist:
+- [ ] Verify that English localization is preserved across all files.
+- [ ] Ensure files remain in the root directory layout.
+- [ ] Confirm no upstream Russian strings or obsolete directory paths were reintroduced.
+- [ ] Verify functionality before merging into \`main\`."
+
+          if [ -z "$PR_EXISTS" ]; then
+            gh pr create \
+              --base main \
+              --head "$SYNC_BRANCH" \
+              --title "chore(sync): sync updates from upstream ($DATE_STR)" \
+              --body "$PR_BODY"
+          else
+            gh pr edit "$PR_EXISTS" \
+              --title "chore(sync): sync updates from upstream ($DATE_STR)" \
+              --body "$PR_BODY"
+          fi
