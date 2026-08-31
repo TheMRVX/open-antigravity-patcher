@@ -348,37 +348,31 @@ jobs:
           prerelease: ${{ github.event.inputs.prerelease || false }}
           files: release_assets/*
           body: |
-            ## 🚀 Open AG Patcher ${{ steps.release_info.outputs.tag_name }}
+            ## Open AG Patcher ${{ steps.release_info.outputs.tag_name }}
 
-            An open-source region lock bypass & patcher for **Antigravity 2.0**, **Antigravity IDE**, **Antigravity CLI** (`agy`), and **Google Antigravity extension for VS Code**.
+            Open-source region lock bypass and patcher for Antigravity 2.0, Antigravity IDE, Antigravity CLI (`agy`), and Google Antigravity extension for VS Code.
 
-            ---
+            ### Changes
+            - **Localization**: Full English localization across all CLI menus, prompts, diagnostics, and documentation.
+            - **Architecture**: Flattened repository layout with modules located at repository root.
+            - **Upstream Sync**: Integrated CI workflow for automated synchronization with upstream updates.
+            - **Cross-Platform Distribution**: Automated binary builds and packaging for Windows, macOS, and Linux across x86-64 and ARM64 architectures.
+            - **Debian Packaging**: Native `.deb` packages for Debian and Ubuntu-based Linux distributions.
 
-            ### 🌟 Key Highlights & Changes
-            - 🌐 **Full English Localization**: Entire codebase, interactive CLI menu, docstrings, notices, and documentation fully localized to English.
-            - 📁 **Flattened Project Structure**: Clean, standard root directory layout for easier execution and maintainability.
-            - 🔄 **Automated Upstream Sync**: Integrated CI workflow for keeping the fork synchronized with upstream releases.
-            - 💻 **Multi-Platform Support**: Ready-to-use native binaries, packages, and archives for Windows, macOS, and Linux (x86-64 and ARM64).
+            ### Assets
 
-            ---
+            | Platform | Architecture | Format | Artifact |
+            |:---|:---|:---|:---|
+            | Windows | x86-64 | Standalone Executable / ZIP | `Open_AG_Patcher_Windows_x64.exe`, `.zip` |
+            | Windows | ARM64 | Standalone Executable / ZIP | `Open_AG_Patcher_Windows_arm64.exe`, `.zip` |
+            | Linux | x86-64 | Executable / Debian (.deb) / Tarball | `Open_AG_Patcher_Linux_x64`, `open-ag-patcher_*_amd64.deb`, `.tar.gz` |
+            | Linux | ARM64 | Executable / Debian (.deb) / Tarball | `Open_AG_Patcher_Linux_arm64`, `open-ag-patcher_*_arm64.deb`, `.tar.gz` |
+            | macOS | Universal2 (Intel + Apple Silicon) | Executable / ZIP / Tarball | `Open_AG_Patcher_macOS`, `.zip`, `.tar.gz` |
 
-            ### 📦 Available Release Packages
+            ### Verification
 
-            | Platform | Architecture | Format | File |
-            | :--- | :--- | :--- | :--- |
-            | **Windows** | x86-64 | Standalone EXE / ZIP | `Open_AG_Patcher_Windows_x64.exe`, `.zip` |
-            | **Windows** | ARM64 | Standalone EXE / ZIP | `Open_AG_Patcher_Windows_arm64.exe`, `.zip` |
-            | **Linux** | x86-64 | Executable / Debian (.deb) / Tarball | `Open_AG_Patcher_Linux_x64`, `open-ag-patcher_*_amd64.deb`, `.tar.gz` |
-            | **Linux** | ARM64 | Executable / Debian (.deb) / Tarball | `Open_AG_Patcher_Linux_arm64`, `open-ag-patcher_*_arm64.deb`, `.tar.gz` |
-            | **macOS** | Universal2 (Intel + Apple Silicon) | Executable / ZIP / Tarball | `Open_AG_Patcher_macOS`, `.zip`, `.tar.gz` |
+            Verify download integrity against the provided `checksums.txt`:
 
-            ---
-
-            ### 🔒 Integrity & Verification
-            Verify the integrity of downloaded binaries using the included `checksums.txt`:
             ```bash
             sha256sum -c checksums.txt
             ```
-
-            ---
-            *Maintained by [@TheMRVX](https://github.com/TheMRVX/open-antigravity-patcher) • Licensed under GNU GPL-3.0*

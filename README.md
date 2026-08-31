@@ -1,4 +1,4 @@
-# 🔑 Open AG Patcher
+# Open AG Patcher
 
 <p align="center">
   <img src="https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54" alt="Python">
@@ -13,7 +13,7 @@ An open-source patcher and region-unlock utility for **Antigravity 2.0**, **Anti
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
 - **Automated Detection**: Automatically finds installations of Antigravity 2.0, Antigravity IDE, Antigravity CLI (`agy`), and the Google Antigravity VS Code extension across Windows registry, standard system paths, and package managers.
 - **Antigravity IDE Patch**: Bypasses the internal `isGoogleInternal` auth gate in `main.js` and automatically clears VS Code compilation caches (`CachedData` and `Code Cache/js`) to ensure changes take effect immediately.
@@ -26,7 +26,7 @@ An open-source patcher and region-unlock utility for **Antigravity 2.0**, **Anti
 
 ---
 
-## 🚀 Quick Start & Usage
+## Quick Start & Usage
 
 ### 1. Launching from Source
 
@@ -63,7 +63,7 @@ python3 main.py /usr/local/bin/agy
 
 ---
 
-## 📋 Interactive Menu Overview
+## Interactive Menu Overview
 
 When launched, the patcher presents an interactive terminal interface:
 
@@ -85,7 +85,7 @@ When launched, the patcher presents an interactive terminal interface:
 
 ---
 
-## 🍎 macOS Setup & Instructions
+## macOS Setup & Instructions
 
 Because macOS enforces strict code-signing (Gatekeeper & Hardened Runtime), modifying an Electron bundle or Mach-O binary requires specific considerations:
 
@@ -128,7 +128,7 @@ codesign -dv "/Applications/Antigravity IDE.app" 2>&1 | grep Signature
 
 ---
 
-## 🔍 Technical Details: How the Patches Work
+## Technical Details: How the Patches Work
 
 ### 1. Antigravity IDE Patch (`main.js`)
 
@@ -175,12 +175,12 @@ The official extension checks release channels and automatically redownloads the
 
 ---
 
-## 🛠️ Troubleshooting & Error Guide
+## Troubleshooting & Error Guide
 
-### ⚠️ Error HTTP 500 Internal Server Error
+### Error HTTP 500 Internal Server Error
 If you receive `HTTP 500 Internal Server Error` during AI queries in Antigravity IDE, this indicates an upstream server error on Google's backend. The local client patch cannot resolve internal server issues; switching accounts or regions may help.
 
-### ⚠️ Error HTTP 403 Forbidden / SUBSCRIPTION_REQUIRED (#3501)
+### Error HTTP 403 Forbidden / SUBSCRIPTION_REQUIRED (#3501)
 ```json
 {
   "error": {
@@ -201,7 +201,7 @@ If you receive `HTTP 500 Internal Server Error` during AI queries in Antigravity
 - **Explanation**: The patcher modifies local files to bypass client-side region checks, but cannot fabricate server-side licenses.
 - **Solution**: Use an account with access to the service or configure an active subscription.
 
-### ⚠️ Error HTTP 400 Bad Request ("User location is not supported")
+### Error HTTP 400 Bad Request ("User location is not supported")
 ```json
 {
   "error": {
@@ -211,13 +211,13 @@ If you receive `HTTP 500 Internal Server Error` during AI queries in Antigravity
   }
 }
 ```
-- **Solution**: Apply **PATCH → `1` (Antigravity IDE patch)**. If already patched, verify that you restarted the IDE and that your network DNS/IP settings are not triggering server-side geo-blocks.
+- **Solution**: Apply **PATCH → 1 (Antigravity IDE patch)**. If already patched, verify that you restarted the IDE and that your network DNS/IP settings are not triggering server-side geo-blocks.
 
-### ⚠️ Patch Error: `✗ isGoogleInternal -> true (auth) — pattern not found`
+### Patch Error: `isGoogleInternal -> true (auth) — pattern not found`
 - **Cause**: The patcher detected a `main.js` file, but it belongs to another Electron app or is from an unsupported version.
-- **Solution**: Choose **TOOLS → `11` (Select custom path)** and specify the exact path to your Antigravity IDE directory manually.
+- **Solution**: Choose **TOOLS → 11 (Select custom path)** and specify the exact path to your Antigravity IDE directory manually.
 
-### ⚠️ macOS: "Operation not permitted"
+### macOS: "Operation not permitted"
 If you encounter permission errors when creating backups on macOS:
 1. Grant Full Disk Access to Terminal: **System Settings → Privacy & Security → Full Disk Access**.
 2. Remove quarantine attributes:
@@ -227,7 +227,7 @@ If you encounter permission errors when creating backups on macOS:
 
 ---
 
-## 🔎 Discovery & Search Order
+## Discovery & Search Order
 
 The patcher looks for target files in the following order:
 
@@ -241,7 +241,7 @@ The patcher looks for target files in the following order:
 
 ---
 
-## ⚙️ Requirements & Compatibility
+## Requirements & Compatibility
 
 - **Python**: 3.8 or higher
 - **Dependencies**: `packaging`
@@ -255,7 +255,7 @@ The patcher looks for target files in the following order:
 
 ---
 
-## 🛠️ Building Standalone Executables
+## Building Standalone Executables
 
 To build standalone binary executables using PyInstaller:
 
@@ -282,7 +282,7 @@ pip install -r requirements.txt
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```text
 open-antigravity-patcher/
@@ -295,7 +295,9 @@ open-antigravity-patcher/
 ├── icon.ico                    # Application icon
 ├── .github/
 │   └── workflows/
-│       └── build-python.yml    # Multi-platform CI build pipeline
+│       ├── build-python.yml    # Multi-platform CI build pipeline
+│       ├── release.yml         # Automated multi-platform release pipeline
+│       └── sync-upstream.yml   # Upstream synchronization workflow
 └── patcher/
     ├── __init__.py             # Package root
     ├── constants.py            # Global constants, regexes, and ANSI palette
@@ -322,7 +324,7 @@ open-antigravity-patcher/
 
 ---
 
-## 📜 License & Attribution
+## License & Attribution
 
 This project is licensed under the **GNU General Public License v3.0** ([`LICENSE`](LICENSE)).
 
