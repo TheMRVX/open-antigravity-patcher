@@ -1,0 +1,45 @@
+name: Sync with Upstream
+
+on:
+  workflow_dispatch: # Allow manual trigger via GitHub Actions UI
+  schedule:
+    - cron: '0 12 * * 1' # Check every Monday at 12:00 UTC
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    name: Sync with Upstream Repository
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add and Fetch Upstream
+        run: |
+          git remote add upstream https://github.com/AvenCores/open-antigravity-patcher.git
+          git fetch upstream main
+
+      - name: Check for New Upstream Commits
+        id: check_upstream
+        run: |
+          BEHIND_COUNT=$(git rev-list --count HEAD..upstream/main)
+          echo "behind_count=$BEHIND_COUNT" >> $GITHUB_OUTPUT
+          echo "Upstream is $BEHIND_COUNT commit(s) ahead."
+
+      - name: Merge Upstream Changes (with Directory Rename Tracking)
+        if: steps.check_upstream.outputs.behind_count != '0'
+        run: |
+          # Git ort merge driver automatically tracks renamed files across directories
+          git merge -X find-renames=40% upstream/main -m "chore(sync): merge upstream updates from AvenCores/open-antigravity-patcher"
+          git push origin main
