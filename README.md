@@ -331,6 +331,7 @@ open-antigravity-patcher/
 
 This project is licensed under the **GNU General Public License v3.0** ([`LICENSE`](LICENSE)).
 
-### Attribution
+### Attribution & Project Links
+- Fork maintained by [TheMRVX](https://github.com/TheMRVX/open-antigravity-patcher).
+- Upstream project development by [AvenCores](https://github.com/AvenCores/open-antigravity-patcher).
 - Portions of the binary machine code patching logic and research are based on [eligibility-antigravity-patcher](https://github.com/QNIX-Dev/eligibility-antigravity-patcher) (MIT License).
-- Upstream project development by [AvenCores / TheMRVX](https://github.com/AvenCores/open-antigravity-patcher).

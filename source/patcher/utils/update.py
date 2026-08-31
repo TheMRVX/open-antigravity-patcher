@@ -8,7 +8,7 @@ from patcher.constants import VERSION, COLOR_CYAN, COLOR_GREEN, COLOR_YELLOW, CO
 from patcher.utils.console import color, link, info, ok, warn, err, hint, _frame_border, _frame_row
 
 
-GITHUB_REPO = "AvenCores/open-antigravity-patcher"
+GITHUB_REPO = "TheMRVX/open-antigravity-patcher"
 RELEASES_URL = f"https://github.com/{GITHUB_REPO}/releases"
 ISSUES_URL = f"https://github.com/{GITHUB_REPO}/issues"
 API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"

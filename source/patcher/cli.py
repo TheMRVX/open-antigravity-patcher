@@ -335,9 +335,11 @@ def show_about():
     print()
     hint("Attribution & License:")
     attr_link = link("https://github.com/QNIX-Dev/eligibility-antigravity-patcher", "eligibility-antigravity-patcher", COLOR_CYAN, COLOR_UNDERLINE)
+    fork_link = link("https://github.com/TheMRVX/open-antigravity-patcher", "TheMRVX/open-antigravity-patcher", COLOR_CYAN, COLOR_UNDERLINE)
     upstream_link = link("https://github.com/AvenCores/open-antigravity-patcher", "AvenCores/open-antigravity-patcher", COLOR_CYAN, COLOR_UNDERLINE)
-    print(f"   • License:    GPL-3.0 License")
+    print(f"   • Repository: {fork_link}")
     print(f"   • Upstream:   {upstream_link}")
+    print(f"   • License:    GPL-3.0 License")
     print(f"   • Based on:   {attr_link} (MIT)")
 
 
@@ -617,7 +619,7 @@ def run_cli():
                               vscode_agy_path=vscode_agy_path, show_search_line=searched)
             print()
             if confirmed("Open GitHub repository in browser?"):
-                url = "https://github.com/AvenCores/open-antigravity-unlock"
+                url = "https://github.com/TheMRVX/open-antigravity-patcher"
                 webbrowser.open(url)
                 ok(f"Opening: {color(url, COLOR_CYAN)}")
             else:

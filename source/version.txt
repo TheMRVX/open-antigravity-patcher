@@ -13,7 +13,7 @@ VSVersionInfo(
     StringFileInfo([
       StringTable(
         '040904B0',
-        [StringStruct('CompanyName', 'avencores'),
+        [StringStruct('CompanyName', 'TheMRVX'),
          StringStruct('FileDescription', 'Open AG Patcher'),
          StringStruct('FileVersion', '1.3.4'),
          StringStruct('InternalName', 'open_ag_patcher'),
