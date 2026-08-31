@@ -1,4 +1,4 @@
-name: Build Python
+name: Build Python (CI Test)
 
 on:
   workflow_dispatch:
@@ -8,59 +8,49 @@ permissions:
 
 jobs:
   # ─────────────────────────────────────────────────────────────────────────────
-  # Windows: x64, x86
-  # PyInstaller runs natively; architecture param selects the Python interpreter bitness.
+  # Windows: x64
   # ─────────────────────────────────────────────────────────────────────────────
-  build-windows:
-    name: Build Windows (${{ matrix.arch }})
+  build-windows-x64:
+    name: Build Windows (x64)
     runs-on: windows-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: x64
-            python-arch: x64
-            output: Open_AG_Patcher_Windows_x64.exe
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Set up Python (${{ matrix.arch }})
+      - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: '3.x'
-          architecture: ${{ matrix.python-arch }}
+          architecture: 'x64'
 
       - name: Install dependencies
         run: pip install -r requirements.txt
 
       - name: Build with PyInstaller
-        run: >
-          pyinstaller --onefile
-          --uac-admin
-          --icon=icon.ico
-          --name="Open_AG_Patcher_Windows_x64"
-          --noupx
-          --clean
-          --version-file=version.txt
-          main.py
+        shell: bash
+        run: |
+          pyinstaller --onefile \
+            --uac-admin \
+            --icon=icon.ico \
+            --name="open-ag-patcher_windows_x64" \
+            --noupx \
+            --clean \
+            --version-file=version.txt \
+            main.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: python-windows-${{ matrix.arch }}
-          path: dist/${{ matrix.output }}
+          name: windows-x64
+          path: dist/*.exe
           if-no-files-found: error
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # Windows ARM64 — native windows-11-arm runner
-  # setup-python@v6 on ARM64 runners does not accept the 'architecture' param,
-  # so this target runs as a dedicated job.
+  # Windows ARM64
   # ─────────────────────────────────────────────────────────────────────────────
   build-windows-arm64:
-    name: Build Windows (arm64)
+    name: Build Windows (ARM64)
     runs-on: windows-11-arm
 
     steps:
@@ -76,21 +66,22 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Build with PyInstaller
-        run: >
-          pyinstaller --onefile
-          --uac-admin
-          --icon=icon.ico
-          --name="Open_AG_Patcher_Windows_arm64"
-          --noupx
-          --clean
-          --version-file=version.txt
-          main.py
+        shell: bash
+        run: |
+          pyinstaller --onefile \
+            --uac-admin \
+            --icon=icon.ico \
+            --name="open-ag-patcher_windows_arm64" \
+            --noupx \
+            --clean \
+            --version-file=version.txt \
+            main.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: python-windows-arm64
-          path: dist/Open_AG_Patcher_Windows_arm64.exe
+          name: windows-arm64
+          path: dist/*.exe
           if-no-files-found: error
 
   # ─────────────────────────────────────────────────────────────────────────────
@@ -112,27 +103,46 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Build with PyInstaller
-        run: >
-          pyinstaller --onefile
-          --icon=icon.ico
-          --name="Open_AG_Patcher_Linux_x64"
-          --hidden-import=packaging
-          --hidden-import=packaging.version
-          --hidden-import=packaging.specifiers
-          --hidden-import=packaging.requirements
-          --clean
-          main.py
+      - name: Build with PyInstaller and Package
+        run: |
+          pyinstaller --onefile \
+            --icon=icon.ico \
+            --name="open-ag-patcher" \
+            --hidden-import=packaging \
+            --hidden-import=packaging.version \
+            --hidden-import=packaging.specifiers \
+            --hidden-import=packaging.requirements \
+            --clean \
+            main.py
+
+          tar -czvf dist/open-ag-patcher_linux_x64.tar.gz -C dist open-ag-patcher -C .. README.md LICENSE
+
+          DEB_DIR="deb_x64"
+          mkdir -p "$DEB_DIR/DEBIAN" "$DEB_DIR/usr/local/bin"
+          cp dist/open-ag-patcher "$DEB_DIR/usr/local/bin/open-ag-patcher"
+          chmod 755 "$DEB_DIR/usr/local/bin/open-ag-patcher"
+          cat << EOF > "$DEB_DIR/DEBIAN/control"
+          Package: open-ag-patcher
+          Version: 1.4.0
+          Section: utils
+          Priority: optional
+          Architecture: amd64
+          Maintainer: TheMRVX <https://github.com/TheMRVX/open-antigravity-patcher>
+          Description: Open-source region lock bypass & patcher for Antigravity.
+          EOF
+          dpkg-deb --build "$DEB_DIR" "dist/open-ag-patcher_linux_amd64.deb"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: python-linux-x64
-          path: dist/Open_AG_Patcher_Linux_x64
+          name: linux-x64
+          path: |
+            dist/*.tar.gz
+            dist/*.deb
           if-no-files-found: error
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # Linux ARM64 — native ubuntu-24.04-arm runner
+  # Linux ARM64
   # ─────────────────────────────────────────────────────────────────────────────
   build-linux-arm64:
     name: Build Linux (ARM64)
@@ -150,37 +160,56 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Build with PyInstaller
-        run: >
-          pyinstaller --onefile
-          --icon=icon.ico
-          --name="Open_AG_Patcher_Linux_arm64"
-          --hidden-import=packaging
-          --hidden-import=packaging.version
-          --hidden-import=packaging.specifiers
-          --hidden-import=packaging.requirements
-          --clean
-          main.py
+      - name: Build with PyInstaller and Package
+        run: |
+          pyinstaller --onefile \
+            --icon=icon.ico \
+            --name="open-ag-patcher" \
+            --hidden-import=packaging \
+            --hidden-import=packaging.version \
+            --hidden-import=packaging.specifiers \
+            --hidden-import=packaging.requirements \
+            --clean \
+            main.py
+
+          tar -czvf dist/open-ag-patcher_linux_arm64.tar.gz -C dist open-ag-patcher -C .. README.md LICENSE
+
+          DEB_DIR="deb_arm64"
+          mkdir -p "$DEB_DIR/DEBIAN" "$DEB_DIR/usr/local/bin"
+          cp dist/open-ag-patcher "$DEB_DIR/usr/local/bin/open-ag-patcher"
+          chmod 755 "$DEB_DIR/usr/local/bin/open-ag-patcher"
+          cat << EOF > "$DEB_DIR/DEBIAN/control"
+          Package: open-ag-patcher
+          Version: 1.4.0
+          Section: utils
+          Priority: optional
+          Architecture: arm64
+          Maintainer: TheMRVX <https://github.com/TheMRVX/open-antigravity-patcher>
+          Description: Open-source region lock bypass & patcher for Antigravity.
+          EOF
+          dpkg-deb --build "$DEB_DIR" "dist/open-ag-patcher_linux_arm64.deb"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: python-linux-arm64
-          path: dist/Open_AG_Patcher_Linux_arm64
+          name: linux-arm64
+          path: |
+            dist/*.tar.gz
+            dist/*.deb
           if-no-files-found: error
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # macOS — universal2 binary (Intel + Apple Silicon in one file)
+  # macOS Universal2
   # ─────────────────────────────────────────────────────────────────────────────
   build-macos:
-    name: Build macOS (universal2)
+    name: Build macOS (Universal2)
     runs-on: macos-15
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Set up Python (universal2 / arm64 host)
+      - name: Set up Python (universal2)
         uses: actions/setup-python@v6
         with:
           python-version: '3.x'
@@ -188,23 +217,24 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Build with PyInstaller (universal2)
-        run: >
-          pyinstaller --onefile
-          --name="Open_AG_Patcher_macOS"
-          --target-arch universal2
-          --hidden-import=packaging
-          --hidden-import=packaging.version
-          --hidden-import=packaging.specifiers
-          --hidden-import=packaging.requirements
-          --clean
-          main.py
+      - name: Build with PyInstaller (Universal2)
+        run: |
+          pyinstaller --onefile \
+            --name="open-ag-patcher" \
+            --target-arch universal2 \
+            --hidden-import=packaging \
+            --hidden-import=packaging.version \
+            --hidden-import=packaging.specifiers \
+            --hidden-import=packaging.requirements \
+            --clean \
+            main.py
+
+          chmod +x dist/open-ag-patcher
+          zip -j dist/open-ag-patcher_macos_universal.zip dist/open-ag-patcher README.md LICENSE
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: python-macos-universal2
-          path: dist/Open_AG_Patcher_macOS
+          name: macos-universal
+          path: dist/*.zip
           if-no-files-found: error
-
-
