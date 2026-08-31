@@ -1,0 +1,384 @@
+name: Release Multi-Platform Binaries
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release Tag (e.g. v1.4.0)'
+        required: true
+        default: 'v1.4.0'
+      draft:
+        description: 'Create as Draft Release'
+        type: boolean
+        default: false
+      prerelease:
+        description: 'Create as Pre-release'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Windows x64
+  # ─────────────────────────────────────────────────────────────────────────────
+  build-windows-x64:
+    name: Build Windows (x64)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+          architecture: 'x64'
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build Binary with PyInstaller
+        run: >
+          pyinstaller --onefile
+          --uac-admin
+          --icon=icon.ico
+          --name="Open_AG_Patcher_Windows_x64"
+          --noupx
+          --clean
+          --version-file=version.txt
+          main.py
+
+      - name: Package ZIP
+        run: |
+          powershell Compress-Archive -Path dist/Open_AG_Patcher_Windows_x64.exe, README.md, LICENSE -DestinationPath dist/Open_AG_Patcher_Windows_x64.zip
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: assets-windows-x64
+          path: |
+            dist/Open_AG_Patcher_Windows_x64.exe
+            dist/Open_AG_Patcher_Windows_x64.zip
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Windows ARM64
+  # ─────────────────────────────────────────────────────────────────────────────
+  build-windows-arm64:
+    name: Build Windows (ARM64)
+    runs-on: windows-11-arm
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build Binary with PyInstaller
+        run: >
+          pyinstaller --onefile
+          --uac-admin
+          --icon=icon.ico
+          --name="Open_AG_Patcher_Windows_arm64"
+          --noupx
+          --clean
+          --version-file=version.txt
+          main.py
+
+      - name: Package ZIP
+        run: |
+          powershell Compress-Archive -Path dist/Open_AG_Patcher_Windows_arm64.exe, README.md, LICENSE -DestinationPath dist/Open_AG_Patcher_Windows_arm64.zip
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: assets-windows-arm64
+          path: |
+            dist/Open_AG_Patcher_Windows_arm64.exe
+            dist/Open_AG_Patcher_Windows_arm64.zip
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Linux x64 (Executable, tar.gz, and .deb)
+  # ─────────────────────────────────────────────────────────────────────────────
+  build-linux-x64:
+    name: Build Linux (x64)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build Binary with PyInstaller
+        run: >
+          pyinstaller --onefile
+          --icon=icon.ico
+          --name="Open_AG_Patcher_Linux_x64"
+          --hidden-import=packaging
+          --hidden-import=packaging.version
+          --hidden-import=packaging.specifiers
+          --hidden-import=packaging.requirements
+          --clean
+          main.py
+
+      - name: Package Tarball and Debian (.deb) Package
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if [ -z "$VERSION" ] || [ "$VERSION" = "main" ]; then
+            VERSION="${{ github.event.inputs.tag_name }}"
+            VERSION="${VERSION#v}"
+          fi
+          [ -z "$VERSION" ] && VERSION="1.4.0"
+
+          # Tarball
+          tar -czvf dist/Open_AG_Patcher_Linux_x64.tar.gz -C dist Open_AG_Patcher_Linux_x64 -C .. README.md LICENSE
+
+          # Debian package
+          DEB_DIR="deb_x64"
+          mkdir -p "$DEB_DIR/DEBIAN" "$DEB_DIR/usr/local/bin"
+          cp dist/Open_AG_Patcher_Linux_x64 "$DEB_DIR/usr/local/bin/open-ag-patcher"
+          chmod 755 "$DEB_DIR/usr/local/bin/open-ag-patcher"
+
+          cat << EOF > "$DEB_DIR/DEBIAN/control"
+          Package: open-ag-patcher
+          Version: ${VERSION}
+          Section: utils
+          Priority: optional
+          Architecture: amd64
+          Maintainer: TheMRVX <https://github.com/TheMRVX/open-antigravity-patcher>
+          Description: Open-source region lock bypass & patcher for Antigravity 2.0, IDE, CLI, and VS Code.
+          EOF
+
+          dpkg-deb --build "$DEB_DIR" "dist/open-ag-patcher_${VERSION}_amd64.deb"
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: assets-linux-x64
+          path: |
+            dist/Open_AG_Patcher_Linux_x64
+            dist/Open_AG_Patcher_Linux_x64.tar.gz
+            dist/*.deb
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Linux ARM64 (Executable, tar.gz, and .deb)
+  # ─────────────────────────────────────────────────────────────────────────────
+  build-linux-arm64:
+    name: Build Linux (ARM64)
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build Binary with PyInstaller
+        run: >
+          pyinstaller --onefile
+          --icon=icon.ico
+          --name="Open_AG_Patcher_Linux_arm64"
+          --hidden-import=packaging
+          --hidden-import=packaging.version
+          --hidden-import=packaging.specifiers
+          --hidden-import=packaging.requirements
+          --clean
+          main.py
+
+      - name: Package Tarball and Debian (.deb) Package
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if [ -z "$VERSION" ] || [ "$VERSION" = "main" ]; then
+            VERSION="${{ github.event.inputs.tag_name }}"
+            VERSION="${VERSION#v}"
+          fi
+          [ -z "$VERSION" ] && VERSION="1.4.0"
+
+          # Tarball
+          tar -czvf dist/Open_AG_Patcher_Linux_arm64.tar.gz -C dist Open_AG_Patcher_Linux_arm64 -C .. README.md LICENSE
+
+          # Debian package
+          DEB_DIR="deb_arm64"
+          mkdir -p "$DEB_DIR/DEBIAN" "$DEB_DIR/usr/local/bin"
+          cp dist/Open_AG_Patcher_Linux_arm64 "$DEB_DIR/usr/local/bin/open-ag-patcher"
+          chmod 755 "$DEB_DIR/usr/local/bin/open-ag-patcher"
+
+          cat << EOF > "$DEB_DIR/DEBIAN/control"
+          Package: open-ag-patcher
+          Version: ${VERSION}
+          Section: utils
+          Priority: optional
+          Architecture: arm64
+          Maintainer: TheMRVX <https://github.com/TheMRVX/open-antigravity-patcher>
+          Description: Open-source region lock bypass & patcher for Antigravity 2.0, IDE, CLI, and VS Code.
+          EOF
+
+          dpkg-deb --build "$DEB_DIR" "dist/open-ag-patcher_${VERSION}_arm64.deb"
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: assets-linux-arm64
+          path: |
+            dist/Open_AG_Patcher_Linux_arm64
+            dist/Open_AG_Patcher_Linux_arm64.tar.gz
+            dist/*.deb
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # macOS Universal2 (Intel x86-64 + Apple Silicon ARM64)
+  # ─────────────────────────────────────────────────────────────────────────────
+  build-macos:
+    name: Build macOS (Universal2)
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python (Universal2)
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build with PyInstaller (Universal2)
+        run: >
+          pyinstaller --onefile
+          --name="Open_AG_Patcher_macOS"
+          --target-arch universal2
+          --hidden-import=packaging
+          --hidden-import=packaging.version
+          --hidden-import=packaging.specifiers
+          --hidden-import=packaging.requirements
+          --clean
+          main.py
+
+      - name: Package Archives
+        run: |
+          chmod +x dist/Open_AG_Patcher_macOS
+          zip -j dist/Open_AG_Patcher_macOS.zip dist/Open_AG_Patcher_macOS README.md LICENSE
+          tar -czvf dist/Open_AG_Patcher_macOS.tar.gz -C dist Open_AG_Patcher_macOS -C .. README.md LICENSE
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: assets-macos
+          path: |
+            dist/Open_AG_Patcher_macOS
+            dist/Open_AG_Patcher_macOS.zip
+            dist/Open_AG_Patcher_macOS.tar.gz
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Create GitHub Release with Checksums & All Assets
+  # ─────────────────────────────────────────────────────────────────────────────
+  publish-release:
+    name: Publish GitHub Release
+    needs:
+      - build-windows-x64
+      - build-windows-arm64
+      - build-linux-x64
+      - build-linux-arm64
+      - build-macos
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v7
+        with:
+          path: all_dist
+          merge-multiple: true
+
+      - name: Generate Checksums (SHA-256)
+        id: checksums
+        run: |
+          mkdir -p release_assets
+          cp all_dist/* release_assets/ 2>/dev/null || true
+
+          cd release_assets
+          sha256sum * > checksums.txt || shasum -a 256 * > checksums.txt
+          cat checksums.txt
+          cd ..
+
+      - name: Determine Release Tag & Version
+        id: release_info
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if [ -z "$TAG" ] || [ "$TAG" = "main" ]; then
+            TAG="${{ github.event.inputs.tag_name }}"
+          fi
+          [ -z "$TAG" ] && TAG="v1.4.0"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=${TAG#v}" >> $GITHUB_OUTPUT
+
+      - name: Create Release Notes & Publish Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_info.outputs.tag_name }}
+          name: "Open AG Patcher ${{ steps.release_info.outputs.tag_name }}"
+          draft: ${{ github.event.inputs.draft || false }}
+          prerelease: ${{ github.event.inputs.prerelease || false }}
+          files: release_assets/*
+          body: |
+            ## 🚀 Open AG Patcher ${{ steps.release_info.outputs.tag_name }}
+
+            An open-source region lock bypass & patcher for **Antigravity 2.0**, **Antigravity IDE**, **Antigravity CLI** (`agy`), and **Google Antigravity extension for VS Code**.
+
+            ---
+
+            ### 🌟 Key Highlights & Changes
+            - 🌐 **Full English Localization**: Entire codebase, interactive CLI menu, docstrings, notices, and documentation fully localized to English.
+            - 📁 **Flattened Project Structure**: Clean, standard root directory layout for easier execution and maintainability.
+            - 🔄 **Automated Upstream Sync**: Integrated CI workflow for keeping the fork synchronized with upstream releases.
+            - 💻 **Multi-Platform Support**: Ready-to-use native binaries, packages, and archives for Windows, macOS, and Linux (x86-64 and ARM64).
+
+            ---
+
+            ### 📦 Available Release Packages
+
+            | Platform | Architecture | Format | File |
+            | :--- | :--- | :--- | :--- |
+            | **Windows** | x86-64 | Standalone EXE / ZIP | `Open_AG_Patcher_Windows_x64.exe`, `.zip` |
+            | **Windows** | ARM64 | Standalone EXE / ZIP | `Open_AG_Patcher_Windows_arm64.exe`, `.zip` |
+            | **Linux** | x86-64 | Executable / Debian (.deb) / Tarball | `Open_AG_Patcher_Linux_x64`, `open-ag-patcher_*_amd64.deb`, `.tar.gz` |
+            | **Linux** | ARM64 | Executable / Debian (.deb) / Tarball | `Open_AG_Patcher_Linux_arm64`, `open-ag-patcher_*_arm64.deb`, `.tar.gz` |
+            | **macOS** | Universal2 (Intel + Apple Silicon) | Executable / ZIP / Tarball | `Open_AG_Patcher_macOS`, `.zip`, `.tar.gz` |
+
+            ---
+
+            ### 🔒 Integrity & Verification
+            Verify the integrity of downloaded binaries using the included `checksums.txt`:
+            ```bash
+            sha256sum -c checksums.txt
+            ```
+
+            ---
+            *Maintained by [@TheMRVX](https://github.com/TheMRVX/open-antigravity-patcher) • Licensed under GNU GPL-3.0*
