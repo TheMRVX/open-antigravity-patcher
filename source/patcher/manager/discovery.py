@@ -37,7 +37,7 @@ def _win_candidate_roots():
     if scoop:
         out.append(os.path.join(scoop, "apps"))
     
-    # Реестр
+    # Windows Registry
     try:
         import winreg
         hives = [(winreg.HKEY_CURRENT_USER, 'HKCU'), (winreg.HKEY_LOCAL_MACHINE, 'HKLM')]
@@ -95,17 +95,17 @@ def _posix_candidate_roots():
 
 
 def find_manager_binary():
-    """Ищет бинарный файл language_server (language_server.exe на Windows)."""
+    """Searches for language_server binary (language_server.exe on Windows)."""
     rel = os.path.join("resources", "bin", "language_server" + (".exe" if os.name == "nt" else ""))
     
-    # 1. Поиск в PATH через which
+    # 1. Search in PATH via which
     w = shutil.which("language_server")
     if w:
         return w
         
     cands = []
     
-    # 2. Поиск в стандартных директориях
+    # 2. Search in standard directories
     if os.name == "nt":
         for root in _win_candidate_roots():
             cands += glob.glob(os.path.join(root, "*ntigravity*", rel))

@@ -31,8 +31,8 @@ BAK_EXT = ".agybak"
 
 
 # ----------------------------------------------------------------------- Gate --
-# Байт-сигнатурный патчинг машинного кода Go-бинаря agy/agy.exe.
-# Сигнатуры используют re.S, чтобы '.' захватывала также displacement-байт 0x0a.
+# Byte-signature machine code patching for Go binary agy/agy.exe.
+# Signatures use re.S so '.' matches displacement byte 0x0a as well.
 class Gate:
     def __init__(self, sig, patched, fix, offset=0, desc=""):
         self.sig = re.compile(sig, re.S)
@@ -43,9 +43,9 @@ class Gate:
 
     def find(self, data):
         """('patched'|'unpatched', [file offsets to write at]).
-        LookupError, если сигнатура отсутствует (неизвестный билд).
-        Несколько unpatched-вхождений допустимы — патчим все (Go может
-        компилировать одну функцию в нескольких экземплярах)."""
+        LookupError if signature is absent (unsupported build).
+        Multiple unpatched occurrences are permitted — patch all (Go may
+        compile a function in multiple instances)."""
         patched_offsets = [m.start() + self.offset for m in self.patched.finditer(data)]
         if patched_offsets:
             return ("patched", patched_offsets)
@@ -83,12 +83,11 @@ class MultiGate:
 
 
 # ---------------------------------------------------------------------------
-# Gate 1: CLI eligibility screen (единственный гейт начальной проверки).
+# Gate 1: CLI eligibility screen (initial check gate).
 # x64:
 #   test rax,rax ; je eligible ; cmp byte[rax+8],0 ; jne eligible ; call failure_builder
 # Repeating the non-null test keeps ZF=0, so jne always selects eligible.
-# Сигнатура ограничена 16-байтным ядром проверки: хвост (call + register spills)
-# варьируется между сборками, поэтому в паттерн не включается.
+# Signature matches 16-byte core check; trailing call/spills vary between builds.
 CLI_GATE_X64 = Gate(
     rb"\x48\x85\xc0\x0f\x84....\x80\x78\x08\x00\x0f\x85....",
     rb"\x48\x85\xc0\x0f\x84....\x48\x85\xc0\x90\x0f\x85....",
@@ -100,7 +99,7 @@ CLI_GATE_X64 = Gate(
 #   cbnz x1,error ; cbz x0,eligible ; ldrb w1,[x0,#8] ; tbnz w1,#0,eligible
 #   bl failure_builder
 # Loading 1 instead makes tbnz always select eligible.
-# Хвост (bl + stores) варьируется — в паттерн не включается.
+# Trailing bl + stores vary — not included in pattern.
 CLI_GATE_ARM64 = Gate(
     rb"...\xb5...\xb4\x01\x20\x40\x39...\x37",
     rb"...\xb5...\xb4\x21\x00\x80\x52...\x37",
@@ -122,8 +121,8 @@ ALL_GATES = [
 
 @contextlib.contextmanager
 def _mapped(path):
-    """Read-only, zero-copy bytes-view (работает с .find(), слайсами, re) для
-    сканирования сигнатур — не грузит мульти-МБ бинарь в ОЗУ целиком."""
+    """Read-only, zero-copy bytes view for scanning signatures without loading
+    entire multi-MB binary into RAM."""
     with open(path, "rb") as f:
         if os.fstat(f.fileno()).st_size == 0:
             yield b""
@@ -136,7 +135,7 @@ def _mapped(path):
 
 
 def is_locked(path):
-    """True, если файл занят (приложение запущено)."""
+    """True if file is locked (application is currently running)."""
     try:
         with open(path, "r+b"):
             return False
@@ -145,8 +144,8 @@ def is_locked(path):
 
 
 def get_status(path):
-    """('patched'|'unpatched'|'unknown', None) — без исключений наружу.
-    'patched' только если ВСЕ гейты применены."""
+    """('patched'|'unpatched'|'unknown', None) without raising exceptions.
+    'patched' only if ALL gates are applied."""
     if not path or not os.path.isfile(path):
         return ("unknown", None)
     try:
@@ -162,25 +161,24 @@ def get_status(path):
                 return ("patched", None)
             if all(s == "unpatched" for s in states):
                 return ("unpatched", None)
-            return ("unpatched", None)  # частично применён — считаем unpatched
+            return ("unpatched", None)  # partially applied — treat as unpatched
     except OSError:
         return ("unknown", None)
 
 
 def is_already_patched(path):
-    """Совместимый с IDE/asar интерфейс: True только если патч уже применён."""
+    """Compatible interface: True only if patch is already applied."""
     return get_status(path)[0] == "patched"
 
 
 def _make_backup(path):
-    """Снимок чистого файла как <path>.agybak.
-    Вызывается только когда файл unpatched — живые байты это pristine-оригинал.
-    Бэкап, не совпадающий с файлом, устарел (приложение автообновилось) —
-    обновляем его, а не храним."""
+    """Snapshot of pristine file as <path>.agybak.
+    Called only when file is unpatched — live bytes are pristine original.
+    Stale backups (app updated) are automatically refreshed."""
     bak = path + BAK_EXT
     if os.path.exists(bak):
         if filecmp.cmp(path, bak, shallow=False):
-            return  # бэкап уже соответствует этому билду
+            return  # backup already matches this build
         info(f"Backup is stale (app updated) — refreshing {os.path.basename(path)}{BAK_EXT}")
     else:
         info(f"Creating backup -> {os.path.basename(path)}{BAK_EXT}")
@@ -226,7 +224,7 @@ def do_patch_agy(path):
     print()
 
     write_success = False
-    patches = []  # [(offset, gate), ...] — гейты, требующие записи
+    patches = []  # [(offset, gate), ...] — gates to write
     for attempt in range(2):
         if is_locked(path):
             if attempt == 0:
@@ -239,7 +237,7 @@ def do_patch_agy(path):
             err("File is locked — close Antigravity CLI first.")
             return
 
-        # Сканируем в mmap, закрываем ДО записи (zero-copy scan)
+        # Scan in mmap, close before writing (zero-copy scan)
         patches = []
         try:
             with _mapped(path) as d:
@@ -259,7 +257,7 @@ def do_patch_agy(path):
                     hint("agy already patched (all gates).")
                     if not confirm_with_captcha("Apply patch anyway?"):
                         return
-                    # re-patch: перезаписываем все гейты
+                    # re-patch: rewrite all gates
                     patches = []
                     for gate_obj, _ in ALL_GATES:
                         kind, offsets, g = gate_obj.resolve(d)

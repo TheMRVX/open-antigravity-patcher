@@ -3,9 +3,9 @@ import glob
 
 
 def _user_home():
-    """Домашний каталог пользователя. На POSIX при запуске через sudo
-    возвращает дом вызвавшего пользователя (~user), а не /root,
-    чтобы ~/.vscode-server и ~/.gemini находились корректно."""
+    """User home directory. On POSIX when running via sudo,
+    returns the invoking user's home (~user) rather than /root,
+    so that ~/.vscode-server and ~/.gemini are resolved correctly."""
     if os.name == "posix":
         from patcher.utils.file import get_posix_invoking_user_home
         home = get_posix_invoking_user_home()
@@ -15,13 +15,13 @@ def _user_home():
 
 
 def clean_path(raw_path):
-    """Убирает кавычки/пробелы по краям — как в ide/agy discovery."""
+    """Strips quotes and whitespace from edges."""
     return raw_path.strip().strip('"').strip("'")
 
 
 def _extension_roots():
-    """Корневые каталоги расширений VS Code (обычный, Insiders, OSS, remote-server).
-    Первым идёт переопределение через env VSCODE_EXTENSIONS, если задано."""
+    """VS Code extension root directories (standard, Insiders, OSS, remote-server).
+    Environment variable VSCODE_EXTENSIONS takes precedence if set."""
     home = _user_home()
     roots = []
     env = os.environ.get("VSCODE_EXTENSIONS")
@@ -45,9 +45,9 @@ def _extension_roots():
 
 
 def find_extension_dir():
-    """Возвращает новейший каталог расширения google.google-antigravity-*.
-    Имя каталога версионированное (например google.google-antigravity-1.0.0),
-    поэтому ищем по маске и сортируем по mtime (новейший первым)."""
+    """Returns the newest directory for the google.google-antigravity-* extension.
+    Directory name is versioned (e.g. google.google-antigravity-1.0.0),
+    so we match by glob and sort by mtime (newest first)."""
     candidates = []
     for root in _extension_roots():
         candidates += glob.glob(
@@ -61,7 +61,7 @@ def find_extension_dir():
 
 
 def find_extension_js():
-    """Возвращает путь к extension.js расширения google.google-antigravity или ''."""
+    """Returns path to extension.js of google.google-antigravity extension or ''."""
     ext_dir = find_extension_dir()
     if not ext_dir:
         return ""
@@ -70,9 +70,9 @@ def find_extension_js():
 
 
 def resolve_extension_path(raw_path):
-    """Разрешает пользовательский путь к extension.js.
-    Принимает: сам файл extension.js, каталог расширения
-    (google.google-antigravity-*) или корневой каталог extensions."""
+    """Resolves user path to extension.js.
+    Accepts: the extension.js file itself, the extension directory
+    (google.google-antigravity-*), or the root extensions directory."""
     if not raw_path:
         return ""
     cleaned = clean_path(raw_path)
@@ -83,15 +83,15 @@ def resolve_extension_path(raw_path):
     if os.path.isfile(resolved):
         if os.path.basename(resolved).lower() == "extension.js":
             return resolved
-        # Произвольный файл — принимаем как есть (пользователь лучше знает)
+        # Arbitrary file - accept as is
         return resolved
 
     if os.path.isdir(resolved):
-        # Каталог самого расширения
+        # Extension directory directly
         direct = os.path.join(resolved, "extension.js")
         if os.path.isfile(direct):
             return direct
-        # Корневой каталог extensions — ищем внутри google.google-antigravity-*
+        # Root extensions directory — search inside google.google-antigravity-*
         hits = glob.glob(
             os.path.join(resolved, "google.google-antigravity-*", "extension.js")
         )
@@ -104,9 +104,9 @@ def resolve_extension_path(raw_path):
 
 
 def find_gemini_antigravity_binary():
-    """Бинарь, скачиваемый расширением в ~/.gemini/bin.
+    """Binary downloaded by the extension into ~/.gemini/bin.
     Windows: antigravity.exe / agy.exe, macOS/Linux: antigravity / agy.
-    Возвращает путь или ''. Используется ТОЛЬКО пунктом 'Antigravity VS Code Patch'."""
+    Returns path or ''. Used ONLY by 'Antigravity VS Code Patch'."""
     home = _user_home()
     ext = ".exe" if os.name == "nt" else ""
     for name in ("antigravity", "agy"):
@@ -117,6 +117,6 @@ def find_gemini_antigravity_binary():
 
 
 def describe_gemini_binary_path():
-    """Человекочитаемый ожидаемый путь к бинарю (для сообщений)."""
+    """Human-readable expected binary path (for messages)."""
     name = "antigravity.exe" if os.name == "nt" else "antigravity"
     return os.path.join("~", ".gemini", "bin", name)

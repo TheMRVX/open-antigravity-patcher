@@ -4,13 +4,12 @@ import shutil
 
 
 def clean_path(raw_path):
-    """Убирает кавычки/пробелы по краям — как ide/discovery.clean_path."""
+    """Strips quotes and whitespace from edges."""
     return raw_path.strip().strip('"').strip("'")
 
 
 def _dedup_newest(paths):
-    """Дедуплицирует реальные пути и сортирует по mtime (новейший первым).
-    Аналог _dedup_newest из patch.py."""
+    """Deduplicates real paths and sorts by modification time (newest first)."""
     seen = set()
     out = []
     existing = {p for p in paths if p and os.path.exists(p)}
@@ -23,7 +22,7 @@ def _dedup_newest(paths):
 
 
 def _win_candidate_dirs():
-    """Корни поиска agy.exe на Windows: env-переменные + scoop + Programs."""
+    """Search roots for agy.exe on Windows: environment variables + scoop + Programs."""
     out = []
     for var in ("LOCALAPPDATA", "PROGRAMFILES", "PROGRAMFILES(X86)",
                 "ProgramData", "APPDATA"):
@@ -44,7 +43,7 @@ def _win_candidate_dirs():
 
 
 def _posix_candidate_dirs():
-    """Каталоги поиска бинаря agy на POSIX."""
+    """Search directories for agy binary on POSIX."""
     from patcher.utils.file import get_posix_invoking_user_home
     user_home = get_posix_invoking_user_home()
     out = ["/usr/local/bin", "/usr/bin", "/opt/antigravity/bin", "/opt/antigravity"]
@@ -61,7 +60,7 @@ def _win_find():
     cands = []
     w = shutil.which("agy")
     if w:
-        # which() возвращает upper-case .EXE из PATHEXT; нормализуем для dedup/вывода
+        # which() returns upper-case .EXE from PATHEXT; normalize for dedup
         base, ext = os.path.splitext(w)
         cands.append(base + ext.lower())
     for root in _win_candidate_dirs():
@@ -85,8 +84,8 @@ def _posix_find():
 
 
 def find_agy_binary():
-    """Возвращает путь к бинарю agy (agy.exe на Windows, agy на POSIX) или ''.
-    Discovery location-agnostic: PATH + стандартные каталоги + scoop."""
+    """Returns path to agy binary (agy.exe on Windows, agy on POSIX) or ''.
+    Discovery is location-agnostic: PATH + standard directories + scoop."""
     try:
         hits = _win_find() if os.name == "nt" else _posix_find()
     except Exception:
@@ -95,9 +94,9 @@ def find_agy_binary():
 
 
 def resolve_agy_path(raw_path):
-    """Разрешает пользовательский путь к бинарию agy.
-    Возвращает валидный путь или ''. Файл agy/agy.exe принимается напрямую;
-    каталог — ищется внутри через find_agy_binary-подобные globs."""
+    """Resolves user-specified path to agy binary.
+    Returns valid path or ''. agy/agy.exe file is accepted directly;
+    directories are searched using glob patterns."""
     if not raw_path:
         return ""
     cleaned = clean_path(raw_path)
@@ -109,11 +108,11 @@ def resolve_agy_path(raw_path):
         name = os.path.basename(resolved).lower()
         if name in ("agy", "agy.exe"):
             return resolved
-        # Произвольный файл — принимаем как есть (пользователь лучше знает)
+        # Arbitrary file - accept as is
         return resolved
 
     if os.path.isdir(resolved):
-        # Поиск внутри указанного каталога (включая bin/ и scoop-подобные version/)
+        # Search inside specified directory (including bin/ and scoop version dirs)
         patterns = (["agy.exe", os.path.join("bin", "agy.exe")] if os.name == "nt"
                     else ["agy", os.path.join("bin", "agy")])
         hits = []

@@ -196,7 +196,7 @@ def do_patch_manager(path):
     info(f"Target: {color(path, COLOR_CYAN)}")
     hint(f"Size: {color(format_bytes(file_size(path)), COLOR_CYAN)}")
 
-    # Проверка версии Antigravity (считывается из package.json в app.asar)
+    # Check Antigravity version (read from package.json in app.asar)
     asar_path = find_asar_relative_to_manager(path)
     if asar_path:
         ver_status, ver_str = check_antigravity_version(asar_path)

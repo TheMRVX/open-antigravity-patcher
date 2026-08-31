@@ -25,21 +25,19 @@ from patcher.utils.update import handle_patch_failure
 BAK_EXT = ".vscodebak"
 
 # ---------------------------------------------------------------------------
-# PART 1 — маркер и оригинальная строка в extension.js
+# PART 1 — anchor marker in extension.js
 PART1_ANCHOR = "outputChannel.appendLine('[INSTALL] Checking Antigravity releases...');"
 
-# Гибкий regex для PART 1: допускает разные кавычки и пробелы, но требует
-# ПОЛНЫЙ вызов appendLine — вместе с закрывающей скобкой и опциональной ';'.
-# Это гарантирует, что вставка попадёт ПОСЛЕ вызова, а не внутри него.
-# Группа 1 — весь вызов целиком (точка вставки = m.end(1)).
+# Flexible regex for PART 1: matches full appendLine call so injection is placed after it.
+# Group 1 — full call (insertion point = m.end(1)).
 PART1_ANCHOR_RE = re.compile(
     r"(outputChannel\s*\.\s*appendLine\s*\(\s*"            # outputChannel.appendLine(
-    r"(['\"])\[INSTALL\]\s*Checking Antigravity releases[^'\"]*\2"  # 'строка-маркер'
-    r"\s*\)\s*;?)"                                         # ) или );
+    r"(['\"])\[INSTALL\]\s*Checking Antigravity releases[^'\"]*\2"  # anchor string
+    r"\s*\)\s*;?)"                                         # ) or );
 )
 
-# Инъекция: если бинарь уже скачан (targetPathOverride или ~/.gemini/bin),
-# пропускаем проверку версии и повторное скачивание.
+# Injection: if binary is already downloaded (targetPathOverride or ~/.gemini/bin),
+# skip version check and re-download.
 PART1_INJECT = (
     "{const __primary=options.targetPathOverride||getInstalledTargetPath();"
     "const __candidates=[__primary,"
@@ -49,11 +47,8 @@ PART1_INJECT = (
     "Skipping version check and re-download.');return __p;}}}"
 )
 
-# PART 2 — строка проверки смены канала заменяется на константу false,
-# чтобы расширение не считало канал изменённым и не перекачивало бинарь.
-# Строгий regex: ровно три идентификатора (manifestFetched, lastInstalledUrl,
-# releaseBaseUrl) в известном порядке — не цепляет посторонние выражения вида
-# `const X = a && b !== c;`.
+# PART 2 — disable release channel change check by setting it to false,
+# preventing the extension from treating channel as changed and overwriting patched binary.
 PART2_RE = re.compile(
     r"const\s+isChannelChanged\s*=\s*"
     r"manifestFetched\s*&&\s*lastInstalledUrl\s*!==\s*releaseBaseUrl\s*;"
@@ -63,12 +58,12 @@ PART2_REPLACEMENT = "const isChannelChanged = false;"
 
 
 def is_already_patched(content):
-    """True, если обе части патча уже применены к extension.js."""
+    """True if both parts of the patch are already applied to extension.js."""
     return (PART1_INJECT in content) and ("const isChannelChanged = false;" in content)
 
 
 def _apply_part1(content):
-    """Возвращает (новый_контент, статус). Статус: 'applied'|'already'|'not-found'."""
+    """Returns (new_content, status). Status: 'applied'|'already'|'not-found'."""
     if PART1_INJECT in content:
         return content, "already"
     m = PART1_ANCHOR_RE.search(content)
@@ -76,7 +71,7 @@ def _apply_part1(content):
         insert_at = m.end(1)
         new_content = content[:insert_at] + PART1_INJECT + content[insert_at:]
         return new_content, "applied"
-    # Фолбэк: точный поиск по маркеру (на случай экзотического форматирования)
+    # Fallback: exact string search on anchor marker
     idx = content.find(PART1_ANCHOR)
     if idx == -1:
         return content, "not-found"
@@ -86,10 +81,9 @@ def _apply_part1(content):
 
 
 def _apply_part2(content):
-    """Возвращает (новый_контент, статус)."""
+    """Returns (new_content, status)."""
     if PART2_DONE_RE.search(content):
-        # Уже пропатчено; но если рядом остался оригинальный вариант — это другой
-        # экземпляр, обрабатываем его ниже.
+        # Already patched; handle remaining unpatched instances if any
         new_content, n = PART2_RE.subn(PART2_REPLACEMENT, content)
         if n:
             return new_content, "applied"
@@ -114,7 +108,7 @@ def _make_backup(path):
 
 
 def do_patch_vscode(extension_js_path):
-    """Патчит extension.js расширения google.google-antigravity (PART 1 + PART 2)."""
+    """Patches google.google-antigravity extension (extension.js) (PART 1 + PART 2)."""
     from patcher.cli import confirmed
 
     if not extension_js_path or not os.path.isfile(extension_js_path):
@@ -150,7 +144,7 @@ def do_patch_vscode(extension_js_path):
         hint("extension.js already patched (both parts).")
         if not confirmed("Apply patch anyway?"):
             return True
-        # re-patch: пересобираем из бэкапа, если он есть, иначе просто продолжаем
+        # re-patch: rebuild from backup if present
         bak = path + BAK_EXT
         if os.path.isfile(bak):
             try:
@@ -201,9 +195,8 @@ def do_patch_vscode(extension_js_path):
 
 
 def do_restore_vscode(extension_js_path):
-    """Восстанавливает extension.js из бэкапа .vscodebak, а также бинарь
-    в ~/.gemini/bin (antigravity/agy) из его .agybak, если тот был пропатчен
-    пунктом 'Antigravity VS Code Patch'."""
+    """Restores extension.js from .vscodebak backup, and also restores
+    ~/.gemini/bin binary (antigravity/agy) from its .agybak if it was patched."""
     from patcher.cli import confirmed
 
     if not extension_js_path or not os.path.isfile(extension_js_path):
@@ -254,7 +247,7 @@ def do_restore_vscode(extension_js_path):
     print_panel("RESTORE COMPLETE", panel_rows)
     hint("Reload VS Code window (Developer: Reload Window) for the change to take effect.")
 
-    # --- Восстановление бинаря в ~/.gemini/bin (пропатчен agy-патчером) ---
+    # --- Restore binary in ~/.gemini/bin (patched by agy patcher) ---
     from patcher.vscode.discovery import find_gemini_antigravity_binary
     from patcher.agy.patcher import do_restore_agy
 

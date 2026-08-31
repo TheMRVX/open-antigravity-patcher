@@ -60,7 +60,7 @@ def _ide_cache_dirs():
 
 
 def apply_patches(content, ag_version=None):
-    """Применяет патч isGoogleInternal для IDE из manager.py."""
+    """Applies isGoogleInternal patch for Antigravity IDE."""
     results = []
     already = is_already_patched(content)
     matches = [m.group(0) for m in IDE_RE.finditer(content)]
@@ -148,7 +148,7 @@ def do_patch(main_js_path, show_search_line=False):
         warn(f"Could not parse version string: {ver_str}")
         if not confirmed("Proceed anyway?"):
             return
-    # VersionStatus.OK — продолжаем без вопросов
+    # VersionStatus.OK — proceed without prompting
 
     try:
         with open(main_js_path, "r", encoding="utf-8") as f:
@@ -164,7 +164,7 @@ def do_patch(main_js_path, show_search_line=False):
         if not confirm_with_captcha("Apply main.js patches anyway?"):
             return
 
-    # --- БЭКАП ---
+    # --- BACKUP ---
     backup_path = main_js_path + ".bak"
 
     if not os.path.exists(backup_path) and not current_is_patched:
@@ -263,7 +263,7 @@ def do_patch(main_js_path, show_search_line=False):
         handle_patch_failure()
         return
 
-    # Очистка кэша скомпилированных JS файлов VS Code (CachedData / Code Cache)
+    # Clear VS Code compiled JS cache (CachedData / Code Cache)
     info("Clearing IDE compile caches...")
     for c in _ide_cache_dirs():
         try:

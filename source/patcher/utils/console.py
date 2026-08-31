@@ -109,21 +109,12 @@ def print_banner():
     title_left = color("Open AG Patcher", COLOR_BOLD)
     title_right = color(f"v{VERSION}", COLOR_GREEN, COLOR_BOLD)
 
-    label_col = 12  # ширина колонки подписей (Telegram/YouTube) для ровной сетки
-    telegram = color("Telegram".ljust(label_col), COLOR_YELLOW) + link("https://t.me/avencoresyt", "t.me/avencoresyt", COLOR_DIM, COLOR_UNDERLINE)
-    youtube = color("YouTube".ljust(label_col), COLOR_YELLOW) + link("https://youtube.com/@avencores", "youtube.com/@avencores", COLOR_DIM, COLOR_UNDERLINE)
-
-
     print()
     print(f"  {_frame_border('╔', '═', '╗')}")
     print(f"  {_frame_row(title_left, title_right)}")
     print(f"  {_frame_row(color('Region bypass for Antigravity', COLOR_CYAN))}")
     print(f"  {_frame_row(color('Clean • No keys • No telemetry', COLOR_GREEN))}")
-    print(f"  {_frame_border('╟', '─', '╢')}")
-    print(f"  {_frame_row(telegram)}")
-    print(f"  {_frame_row(youtube)}")
     print(f"  {_frame_border('╚', '═', '╝')}")
-
     print()
 
 
@@ -200,7 +191,7 @@ def step(name, applied, detail=""):
 
 
 def _center_line(text, width=MENU_WIDTH):
-    """Дополняет строку пробелами справа до полной ширины панели меню."""
+    """Pads string with spaces on the right to match full menu panel width."""
     visible = _visible_len(text)
     if visible >= width:
         return text
@@ -209,26 +200,25 @@ def _center_line(text, width=MENU_WIDTH):
 
 # ─── Menu UI helpers ──────────────────────────────────────────────────────────
 def print_menu_section(title):
-    """Заголовок секции меню, обведённый тонкой линией.
+    """Menu section header framed with a thin line.
 
-    Пример:  ── PATCH ────────────────────────────────
-    Ширина всей строки (включая ведущий ─) равна MENU_WIDTH,
-    чтобы правый край совпадал с разделителями и рамкой баннера.
+    Example:  ── PATCH ────────────────────────────────
+    Width of entire line (including leading ─) matches MENU_WIDTH.
     """
     label = f" {title} "
     visible = len(label)
-    dashes = "─" * max(1, MENU_WIDTH - visible - 1)  # -1 под ведущий «─»
+    dashes = "─" * max(1, MENU_WIDTH - visible - 1)
     line = color("─", COLOR_GRAY) + color(label, COLOR_CYAN, COLOR_BOLD) + color(dashes, COLOR_GRAY)
     print(f"  {line}")
 
 
 def print_menu_row(number, label, hint="", accent=COLOR_GREEN):
-    """Строка пункта меню.
+    """Menu item row.
 
-    Формат:    [1]  Apply Antigravity IDE patch      Apply / enable bypass
-    number — строка-номер (может быть пустой для разделителей-подсказок).
-    hint — короткое описание справа, рисуется приглушённым цветом.
-    accent — цвет метки номера.
+    Format:    [1]  Apply Antigravity IDE patch      Apply / enable bypass
+    number - item number string (can be empty for divider hints).
+    hint - short description on the right.
+    accent - number tag color.
     """
     num_part = color(f"[{number}]", accent, COLOR_BOLD) if number != "" else color("  ", COLOR_GRAY)
     label_part = color(label, COLOR_WHITE)
@@ -243,12 +233,12 @@ def print_menu_row(number, label, hint="", accent=COLOR_GREEN):
 
 
 def print_menu_divider():
-    """Тонкий горизонтальный разделитель."""
+    """Thin horizontal divider."""
     print(f"  {color('─' * MENU_WIDTH, COLOR_GRAY)}")
 
 
 def print_menu_footer(note=""):
-    """Подвал под списком пунктов: тёмная линия и заметка."""
+    """Menu footer: dim divider line and note."""
     print(f"  {color('─' * MENU_WIDTH, COLOR_GRAY)}")
     if note:
         print(f"  {color(note, COLOR_DIM)}")

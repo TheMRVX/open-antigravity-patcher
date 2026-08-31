@@ -12,7 +12,6 @@ GITHUB_REPO = "AvenCores/open-antigravity-patcher"
 RELEASES_URL = f"https://github.com/{GITHUB_REPO}/releases"
 ISSUES_URL = f"https://github.com/{GITHUB_REPO}/issues"
 API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
-GOIDA_VPN_URL = "https://github.com/AvenCores/goida-vpn-configs"
 
 LAST_UPDATE_RESULT = None
 
@@ -27,20 +26,16 @@ def set_last_update_result(result):
 
 
 def print_network_error_warning():
-    """Print a noticeable warning and VPN recommendation when check_for_updates fails interactively."""
+    """Print a noticeable warning when check_for_updates fails interactively."""
     warn("Could not check for updates (network error).")
-    vpn_link = link(GOIDA_VPN_URL, "goida-vpn-configs", COLOR_CYAN, COLOR_UNDERLINE)
-    hint("Recommendation: Turn on VPN to connect to GitHub and check for updates.")
-    hint(f"Free VPN configs: {vpn_link} (auto-updated V2Ray/VLESS/Hysteria configs by AvenCores)")
+    hint("Recommendation: Check your internet connection or network proxy to reach GitHub.")
 
 
 def print_network_error_banner():
     """Print a framed warning banner in the main menu when update check failed due to network error."""
-    vpn_link = link(GOIDA_VPN_URL, "goida-vpn-configs", COLOR_CYAN, COLOR_UNDERLINE)
     print(f"  {_frame_border('╔', '═', '╗', COLOR_YELLOW)}")
     print(f"  {_frame_row(color('WARNING: Update check failed (network error)', COLOR_YELLOW, COLOR_BOLD), accent=COLOR_YELLOW)}")
-    print(f"  {_frame_row(color('Turn on VPN to check for updates on GitHub', COLOR_CYAN, COLOR_BOLD), accent=COLOR_YELLOW)}")
-    print(f"  {_frame_row(color(f'Free VPN configs: {vpn_link}', COLOR_CYAN), accent=COLOR_YELLOW)}")
+    print(f"  {_frame_row(color('Check your connection to access GitHub updates', COLOR_CYAN, COLOR_BOLD), accent=COLOR_YELLOW)}")
     print(f"  {_frame_border('╚', '═', '╝', COLOR_YELLOW)}")
     print()
 

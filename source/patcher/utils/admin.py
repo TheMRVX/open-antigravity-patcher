@@ -19,7 +19,7 @@ def run_as_admin():
     if is_admin():
         return True
 
-    # Автоматическое повышение прав с обработкой путей с пробелами
+    # Automatic privilege elevation handling paths with spaces
     if getattr(sys, "frozen", False):
         executable = sys.executable
         args_str = " ".join([f'"{a}"' for a in sys.argv[1:]])
@@ -36,7 +36,7 @@ def run_as_admin():
 
 
 def terminate_processes(names):
-    """Пытается завершить процессы по их именам."""
+    """Attempts to terminate processes by their names."""
     success = False
     for name in names:
         try:

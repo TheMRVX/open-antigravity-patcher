@@ -152,8 +152,8 @@ def prompt_yn(question):
 
 
 def confirmed(question):
-    """Возвращает True, если пользователь ответил 'y'."""
-    return prompt_yn(question) in ("y", "yes", "\u0434", "\u0434\u0430")
+    """Returns True if the user answered 'y' or 'yes'."""
+    return prompt_yn(question) in ("y", "yes")
 
 
 def offer_download_and_block(software_name="Antigravity", target_type=None):
@@ -214,7 +214,7 @@ def offer_download_and_block(software_name="Antigravity", target_type=None):
 
 
 def _kv(label, value_text, value_color):
-    """Отформатированная пара ключ/значение с выравниванием меток."""
+    """Formatted key/value pair with label alignment."""
     print(f"      {label:<9}{color(value_text, value_color)}")
 
 
@@ -283,7 +283,7 @@ def print_target_info(main_js_path, manager_path="", agy_path="", vscode_path=""
 
     print()
 
-    # 4. Antigravity VS Code Extension Info (extension.js + бинарь agy)
+    # 4. Antigravity VS Code Extension Info (extension.js + agy binary)
     print_menu_section("ANTIGRAVITY VS CODE EXTENSION")
     _kv("Target:", vscode_path if vscode_path else "Not found", COLOR_CYAN)
     if vscode_path and os.path.isfile(vscode_path):
@@ -322,40 +322,26 @@ def show_about():
     print()
     print(f"  {color('Open AG Patcher', COLOR_BOLD, COLOR_CYAN)} v{VERSION}")
     print("  Open-source region lock bypass tool for Antigravity products:")
-    print("  Antigravity IDE, Antigravity 2.0 (language_server), and Antigravity CLI (agy).")
+    print("  Antigravity IDE, Antigravity 2.0 (language_server), Antigravity CLI (agy),")
+    print("  and Google Antigravity VS Code extension.")
     print("  Allows using Antigravity without VPN or changing Google account region.")
     print()
     hint("Features:")
-    print(f"   • {color('Antigravity IDE patch', COLOR_GREEN)} — main.js isGoogleInternal bypass")
-    print(f"   • {color('Antigravity 2.0 patch', COLOR_GREEN)} — language_server binary patch")
-    print(f"   • {color('Antigravity CLI patch', COLOR_GREEN)} — agy eligibility check bypass")
-    print(f"   • {color('Backup & Restore', COLOR_GREEN)}     — safe, fully reversible modifications")
+    print(f"   • {color('Antigravity IDE patch', COLOR_GREEN)}       — main.js isGoogleInternal bypass")
+    print(f"   • {color('Antigravity 2.0 patch', COLOR_GREEN)}       — language_server binary patch")
+    print(f"   • {color('Antigravity CLI patch', COLOR_GREEN)}       — agy eligibility check bypass")
+    print(f"   • {color('VS Code extension patch', COLOR_GREEN)}     — anti-update guard & binary unlock")
+    print(f"   • {color('Backup & Restore', COLOR_GREEN)}            — safe, fully reversible modifications")
     print()
-    hint("Author & Community:")
-    tg_main = link("https://t.me/avencoresyt", "t.me/avencoresyt", COLOR_CYAN, COLOR_UNDERLINE)
-    tg_chat = link("https://t.me/avencoreschat", "t.me/avencoreschat", COLOR_CYAN, COLOR_UNDERLINE)
-    yt = link("https://youtube.com/@avencores", "youtube.com/@avencores", COLOR_CYAN, COLOR_UNDERLINE)
-    vk = link("https://vk.ru/avencoresreuploads", "vk.ru/avencoresreuploads", COLOR_CYAN, COLOR_UNDERLINE)
-    dz = link("https://dzen.ru/avencores", "dzen.ru/avencores", COLOR_CYAN, COLOR_UNDERLINE)
-    card_num = link("data:text/plain;charset=utf-8,2202%202050%201464%204675", "2202 2050 1464 4675", COLOR_BOLD, COLOR_WHITE, COLOR_UNDERLINE)
+    hint("Attribution & License:")
     attr_link = link("https://github.com/QNIX-Dev/eligibility-antigravity-patcher", "eligibility-antigravity-patcher", COLOR_CYAN, COLOR_UNDERLINE)
-
-    print(f"   • Author:   {color('AvenCores', COLOR_YELLOW)}")
-    print(f"   • Telegram: {tg_main} (Chat: {tg_chat})")
-    print(f"   • YouTube:  {yt}")
-    print(f"   • VK:       {vk}")
-    print(f"   • Dzen:     {dz}")
-    print()
-    hint("Support Author:")
-    print(f"   • {color('SBER:', COLOR_GREEN)} {card_num}")
-    print()
-    hint("License:")
-    print(f"   • GPL-3.0 License (Attribution: {attr_link} / MIT)")
-
+    upstream_link = link("https://github.com/AvenCores/open-antigravity-patcher", "AvenCores/open-antigravity-patcher", COLOR_CYAN, COLOR_UNDERLINE)
+    print(f"   • License:    GPL-3.0 License")
+    print(f"   • Upstream:   {upstream_link}")
+    print(f"   • Based on:   {attr_link} (MIT)")
 
 
 def redraw_main_screen(main_js_path, manager_path="", agy_path="", vscode_path="", vscode_agy_path="", show_search_line=False):
-
     clear_screen()
     print_banner()
     print_target_info(main_js_path, manager_path, agy_path, vscode_path=vscode_path,
@@ -365,29 +351,29 @@ def redraw_main_screen(main_js_path, manager_path="", agy_path="", vscode_path="
 
 
 def set_vscode_path(new_path):
-    """Колбэк для do_patch_vscode_flow — обновляет локальную переменную vscode_path
-    в кадре run_cli (через sys._getframe)."""
+    """Callback for do_patch_vscode_flow — updates local variable vscode_path
+    in run_cli frame (via sys._getframe)."""
     frame = sys._getframe(2)
     if frame.f_code.co_name == "run_cli":
         frame.f_locals["vscode_path"] = new_path
 
 
 def set_vscode_agy_path(new_path):
-    """Колбэк для do_patch_vscode_flow — обновляет локальную переменную vscode_agy_path
-    в кадре run_cli (через sys._getframe)."""
+    """Callback for do_patch_vscode_flow — updates local variable vscode_agy_path
+    in run_cli frame (via sys._getframe)."""
     frame = sys._getframe(2)
     if frame.f_code.co_name == "run_cli":
         frame.f_locals["vscode_agy_path"] = new_path
 
 
 def do_patch_vscode_flow(vscode_path, vscode_agy_path, set_js_cb=None, set_agy_cb=None):
-    """Патчит расширение google.google-antigravity (extension.js) и бинарь
-    ~/.gemini/bin/antigravity (agy) через agy-патчер.
+    """Patches google.google-antigravity extension (extension.js) and the downloaded
+    binary in ~/.gemini/bin/antigravity (agy).
 
-    Патч блокируется, пока не найдены ОБА файла: extension.js и бинарь agy."""
+    Patch is blocked until BOTH files are found: extension.js and agy binary."""
     from patcher.agy.patcher import do_patch_agy
 
-    # --- 0. Предварительный поиск: оба файла должны существовать ---
+    # --- 0. Initial search: both files must exist ---
     if not vscode_path or not os.path.isfile(vscode_path):
         vscode_path = find_extension_js()
         if vscode_path and set_js_cb:
@@ -413,10 +399,10 @@ def do_patch_vscode_flow(vscode_path, vscode_agy_path, set_js_cb=None, set_agy_c
         hint("run it once — it downloads the binary to ~/.gemini/bin automatically.")
         return False
 
-    # --- 1. Патчим extension.js ---
+    # --- 1. Patch extension.js ---
     do_patch_vscode(vscode_path)
 
-    # --- 2. Патчим бинарь ~/.gemini/bin/antigravity (agy-патчем) ---
+    # --- 2. Patch ~/.gemini/bin/antigravity binary (via agy patcher) ---
     print()
     info(f"Found downloaded binary: {color(vscode_agy_path, COLOR_CYAN)}")
     do_patch_agy(vscode_agy_path)
@@ -431,12 +417,12 @@ def run_cli():
     vscode_agy_path = ""
     searched = False
 
-    # 1. Проверяем аргументы командной строки
+    # 1. Check command-line arguments
     if len(sys.argv) > 1:
         args = [a for a in sys.argv[1:] if a not in ("--rollback", "-r")]
         if args:
             arg = " ".join(args)
-            # Пытаемся определить тип цели
+            # Attempt to resolve target type
             ide_path = resolve_target_path(arg)
             if ide_path and os.path.isdir(ide_path):
                 ide_path = find_main_js(ide_path)
@@ -444,26 +430,26 @@ def run_cli():
             if ide_path and os.path.isfile(ide_path) and ide_path.endswith("main.js"):
                 main_js_path = ide_path
             else:
-                # Пробуем как Antigravity 2.0 (Manager / language_server)
+                # Attempt as Antigravity 2.0 (Manager / language_server)
                 mgr_path = resolve_manager_path(arg)
                 if mgr_path and os.path.isfile(mgr_path):
                     manager_path = mgr_path
                 else:
-                    # Пробуем как CLI (agy)
+                    # Attempt as CLI (agy)
                     agy_p = resolve_agy_path(arg)
                     if agy_p and os.path.isfile(agy_p):
                         agy_path = agy_p
                     else:
                         err(f"Provided path does not exist or invalid: {arg}")
 
-    # 2. Проверяем текущую директорию (для Antigravity IDE)
+    # 2. Check current directory (for Antigravity IDE)
     if not main_js_path and not manager_path and not agy_path:
         local = os.path.join(os.getcwd(), "main.js")
         if os.path.exists(local):
             main_js_path = local
             info("Found main.js in current directory")
 
-    # 3. Авто-поиск в системе
+    # 3. Auto-detect on system
     if not main_js_path and not manager_path and not agy_path:
         info("Searching for installations...")
         searched = True
@@ -475,8 +461,7 @@ def run_cli():
         manager_path = find_manager_binary()
         agy_path = find_agy_binary()
 
-    # VS Code extension и его бинарь agy ищем всегда — независимо от того,
-    # найдены ли остальные цели (это отдельный продукт со своей директорией).
+    # Always search for VS Code extension and its agy binary
     if not vscode_path or not vscode_agy_path:
         if not searched:
             info("Searching for installations...")
@@ -485,7 +470,7 @@ def run_cli():
         if not vscode_agy_path:
             vscode_agy_path = find_gemini_antigravity_binary()
 
-    # Если ничего не нашли вообще, даем выбор между открытием страницы загрузки и вводом пути
+    # If nothing is found, offer download page or manual path selection
     if not main_js_path and not manager_path and not agy_path:
         warn("No installations found automatically.")
         hint(f"Download URL: {color(DOWNLOAD_URL, COLOR_CYAN)}")
@@ -556,7 +541,7 @@ def run_cli():
         if choice == "0":
             return
 
-        # Пустой ввод — не выходим, просто перерисовываем меню
+        # Empty input - redraw menu without action
         if choice == "":
             redraw_main_screen(main_js_path, manager_path, agy_path, vscode_path,
                                vscode_agy_path, show_search_line=searched)

@@ -11,7 +11,7 @@ except ImportError:
 
 
 def file_hash(path):
-    """Возвращает SHA-256 файла или None при ошибке."""
+    """Returns SHA-256 hash of file or None on error."""
     try:
         h = hashlib.sha256()
         with open(path, "rb") as f:
@@ -96,10 +96,10 @@ def backup_json_file(path):
 
 
 def find_app_bundle(path):
-    """Поднимается вверх от path до первой директории, оканчивающейся на .app.
+    """Walks up from path to the first directory ending with .app.
 
-    Используется только на macOS, чтобы определить корень .app-бандла
-    для переподписи после модификации main.js.
+    Used on macOS to determine the .app bundle root for re-signing
+    after modifying main.js.
     """
     p = os.path.abspath(path)
     while p and p != os.path.dirname(p):
@@ -110,11 +110,11 @@ def find_app_bundle(path):
 
 
 def remove_macos_immutable_flags(path):
-    """Снимает флаги uchg/schg с файла или директории на macOS.
+    """Removes uchg/schg flags from a file or directory on macOS.
 
-    На macOS файлы внутри .app-бандлов могут иметь флаги immutable,
-    которые блокируют запись даже для root. Вызывать перед попыткой
-    записи в .app-бандл.
+    On macOS, files inside .app bundles may have immutable flags
+    that prevent write access even for root. Call before attempting
+    to write to a .app bundle.
     """
     import sys
     if sys.platform != "darwin":
@@ -131,7 +131,7 @@ def remove_macos_immutable_flags(path):
 
 
 def remove_macos_quarantine(path):
-    """Снимает атрибут com.apple.quarantine с .app-бандла."""
+    """Removes com.apple.quarantine attribute from .app bundle."""
     import sys
     if sys.platform != "darwin":
         return
@@ -147,14 +147,13 @@ def remove_macos_quarantine(path):
 
 
 def resign_macos_bundle(main_js_path):
-    """Переподписывает .app ad-hoc подписью после изменения main.js.
+    """Re-signs .app with ad-hoc signature after modifying main.js.
 
-    На macOS любая модификация файла внутри подписанного .app-бандла
-    нарушает code signature. Electron-приложения с Hardened Runtime
-    после этого падают при запуске. codesign --force --sign - кладёт
-    ad-hoc подпись (без Developer ID), чего достаточно для локального
-    запуска. Дополнительно снимается атрибут com.apple.quarantine,
-    чтобы Gatekeeper не показывал предупреждение.
+    On macOS, any modification inside a signed .app bundle invalidates
+    its code signature. Electron apps with Hardened Runtime crash
+    at launch if the signature is invalid. codesign --force --sign - applies
+    an ad-hoc signature (no Developer ID required), sufficient for local
+    execution. Also removes com.apple.quarantine to avoid Gatekeeper warnings.
     """
     import sys
     if sys.platform != "darwin":
@@ -164,7 +163,7 @@ def resign_macos_bundle(main_js_path):
 
     app_path = find_app_bundle(main_js_path)
     if not app_path:
-        # main.js лежит не внутри .app (например, portable-копия) — пропускаем
+        # main.js is not inside .app (e.g. portable copy) - skip
         return
 
     info(f"Re-signing {os.path.basename(app_path)} (ad-hoc)...")
@@ -186,11 +185,11 @@ def resign_macos_bundle(main_js_path):
 
 
 def resign_macos_binary(path):
-    """Переподписывает Antigravity 2.0 бинарь ad-hoc подписью после его модификации.
+    """Re-signs binary with ad-hoc signature after modification.
 
-    На Apple Silicon macOS немедленно SIGKILL-ит процесс, если code signature
-    не совпадает с содержимым. codesign --force --sign - заменяет Developer ID
-    подпись на ad-hoc (signing identity «-»), чего достаточно для локального запуска.
+    On Apple Silicon macOS, the kernel immediately SIGKILLs any process
+    whose code signature does not match its contents. codesign --force --sign -
+    replaces Developer ID signature with ad-hoc signature for local execution.
     """
     import sys
     if sys.platform != "darwin":
