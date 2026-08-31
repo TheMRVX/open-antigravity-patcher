@@ -51,7 +51,7 @@ jobs:
           fi
 
       - name: Create Sync Branch and Pull Request
-        if: steps.check_upstream.outputs.behind_count != '0' || inputs.force_pr == true
+        if: steps.check_upstream.outputs.behind_count != '0' || github.event.inputs.force_pr == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BEHIND_COUNT: ${{ steps.check_upstream.outputs.behind_count }}
