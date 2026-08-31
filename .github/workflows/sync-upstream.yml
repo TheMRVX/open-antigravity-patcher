@@ -75,18 +75,18 @@ jobs:
 
           PR_BODY="## Upstream Sync Proposed ($DATE_STR)
 
-Upstream repository (\`AvenCores/open-antigravity-patcher\`) has **${BEHIND_COUNT}** new commit(s):
+          Upstream repository (\`AvenCores/open-antigravity-patcher\`) has **${BEHIND_COUNT}** new commit(s):
 
-### Upstream Commits:
-${COMMITS_TEXT}
+          ### Upstream Commits:
+          ${COMMITS_TEXT}
 
----
+          ---
 
-### Review Checklist:
-- [ ] Verify that English localization is preserved across all files.
-- [ ] Ensure files remain in the root directory layout.
-- [ ] Confirm no upstream Russian strings or obsolete directory paths were reintroduced.
-- [ ] Verify functionality before merging into \`main\`."
+          ### Review Checklist:
+          - [ ] Verify that English localization is preserved across all files.
+          - [ ] Ensure files remain in the root directory layout.
+          - [ ] Confirm no upstream Russian strings or obsolete directory paths were reintroduced.
+          - [ ] Verify functionality before merging into \`main\`."
 
           if [ -z "$PR_EXISTS" ]; then
             gh pr create \
