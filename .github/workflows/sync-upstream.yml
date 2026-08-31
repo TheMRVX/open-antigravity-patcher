@@ -51,12 +51,15 @@ jobs:
           fi
 
       - name: Create Sync Branch and Pull Request
-        if: steps.check_upstream.outputs.behind_count != '0' || github.event.inputs.force_pr == 'true'
+        if: steps.check_upstream.outputs.behind_count != '0' || inputs.force_pr == true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BEHIND_COUNT: ${{ steps.check_upstream.outputs.behind_count }}
+          UPSTREAM_COMMITS: ${{ steps.check_upstream.outputs.commits }}
         run: |
           SYNC_BRANCH="sync/upstream-updates"
           DATE_STR=$(date -u +'%Y-%m-%d')
+          COMMITS_TEXT="${UPSTREAM_COMMITS:-No new commits}"
 
           # Switch to isolated sync branch based on current main
           git checkout -B "$SYNC_BRANCH" origin/main
@@ -78,10 +81,10 @@ jobs:
 
           PR_BODY="## Upstream Sync Proposed ($DATE_STR)
 
-Upstream repository (\`AvenCores/open-antigravity-patcher\`) has **${{ steps.check_upstream.outputs.behind_count }}** new commit(s):
+Upstream repository (\`AvenCores/open-antigravity-patcher\`) has **${BEHIND_COUNT}** new commit(s):
 
 ### Upstream Commits:
-${{ steps.check_upstream.outputs.commits || 'No new commits (Manual Trigger)' }}
+${COMMITS_TEXT}
 
 ---
 
