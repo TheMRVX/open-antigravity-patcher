@@ -348,28 +348,52 @@ jobs:
           prerelease: ${{ github.event.inputs.prerelease || false }}
           files: release_assets/*
           body: |
-            ## Open AG Patcher ${{ steps.release_info.outputs.tag_name }}
+            This release provides native binary builds, standalone executables, and packages for Windows, Linux, and macOS.
 
-            Open-source region lock bypass and patcher for Antigravity 2.0, Antigravity IDE, Antigravity CLI (`agy`), and Google Antigravity extension for VS Code.
+            ## Changelog
 
-            ### Changes
-            - **Localization**: Full English localization across all CLI menus, prompts, diagnostics, and documentation.
-            - **Architecture**: Flattened repository layout with modules located at repository root.
-            - **Upstream Sync**: Integrated CI workflow for automated synchronization with upstream updates.
-            - **Cross-Platform Distribution**: Automated binary builds and packaging for Windows, macOS, and Linux across x86-64 and ARM64 architectures.
-            - **Debian Packaging**: Native `.deb` packages for Debian and Ubuntu-based Linux distributions.
+            ### Features & Enhancements
+            - **Full English Localization (`i18n`)**: Localized interactive CLI menus, prompts, diagnostics, and documentation from Russian to idiomatic English.
+            - **Repository Architecture**: Flattened project layout by moving all source modules from `source/` directly to the repository root.
+            - **CI/CD & Multi-Platform Packaging**: Automated build matrix targeting Windows, Linux, and macOS for x86-64 and ARM64 architectures.
+            - **Debian Packaging**: Added native `.deb` package builds for Debian and Ubuntu-based Linux distributions.
+            - **Upstream Synchronization**: Added automated GitHub Actions workflow (`sync-upstream.yml`) to streamline synchronization with upstream developments.
 
-            ### Assets
+            ### Maintenance & Fixes
+            - Standardized `.gitignore` rules for build artifacts, virtual environments, and compiler caches.
+            - Updated release channel and update checker endpoints to point to `TheMRVX/open-antigravity-patcher`.
+            - Documented project architecture, troubleshooting guides, and compatibility requirements in `README.md` and `CHANGELOG.md`.
 
-            | Platform | Architecture | Format | Artifact |
-            |:---|:---|:---|:---|
-            | Windows | x86-64 | Standalone Executable / ZIP | `Open_AG_Patcher_Windows_x64.exe`, `.zip` |
-            | Windows | ARM64 | Standalone Executable / ZIP | `Open_AG_Patcher_Windows_arm64.exe`, `.zip` |
-            | Linux | x86-64 | Executable / Debian (.deb) / Tarball | `Open_AG_Patcher_Linux_x64`, `open-ag-patcher_*_amd64.deb`, `.tar.gz` |
-            | Linux | ARM64 | Executable / Debian (.deb) / Tarball | `Open_AG_Patcher_Linux_arm64`, `open-ag-patcher_*_arm64.deb`, `.tar.gz` |
-            | macOS | Universal2 (Intel + Apple Silicon) | Executable / ZIP / Tarball | `Open_AG_Patcher_macOS`, `.zip`, `.tar.gz` |
+            ---
 
-            ### Verification
+            ## Installation & Quick Start
+
+            ### Windows
+            Download and execute `Open_AG_Patcher_Windows_x64.exe` (or `Open_AG_Patcher_Windows_arm64.exe` for ARM64). Administrative elevation is requested automatically when modifying protected system directories.
+
+            ### Linux
+            Install via the Debian package:
+            ```bash
+            sudo dpkg -i open-ag-patcher_${{ steps.release_info.outputs.version }}_amd64.deb
+            open-ag-patcher
+            ```
+            Or run the standalone binary:
+            ```bash
+            chmod +x Open_AG_Patcher_Linux_x64
+            ./Open_AG_Patcher_Linux_x64
+            ```
+
+            ### macOS
+            Download `Open_AG_Patcher_macOS` (Universal2: Intel + Apple Silicon). Remove the quarantine attribute if running from Terminal:
+            ```bash
+            chmod +x Open_AG_Patcher_macOS
+            xattr -dr com.apple.quarantine Open_AG_Patcher_macOS
+            ./Open_AG_Patcher_macOS
+            ```
+
+            ---
+
+            ## Verification
 
             Verify download integrity against the provided `checksums.txt`:
 
