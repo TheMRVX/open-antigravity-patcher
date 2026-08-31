@@ -61,6 +61,18 @@ python3 main.py "/Applications/Antigravity.app"
 python3 main.py /usr/local/bin/agy
 ```
 
+### 3. Running via Docker
+
+You can also run the patcher containerized without installing Python locally:
+
+```bash
+# Pull and run the interactive CLI
+docker run --rm -it themrvx/open-antigravity-patcher:latest
+
+# Mount and patch host paths directly
+docker run --rm -it -v /path/to/target:/target themrvx/open-antigravity-patcher:latest /target
+```
+
 ---
 
 ## Interactive Menu Overview

@@ -1,0 +1,16 @@
+.git
+.github
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+build/
+dist/
+*.spec
+.idea/
+.vscode/
+release_staging/
+final_staging/
